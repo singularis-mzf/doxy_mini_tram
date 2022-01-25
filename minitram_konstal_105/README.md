@@ -45,12 +45,6 @@ This is done by:
 This section explains the steps I have used to create a working B3D file from my Blender model.
 You may realize that I am a beginner in Blender, and these steps may be a bit awkward.
 
-### UV Maps
-
-Textures shall be shared among each instance of wheel, roof hatch, pantograph insulator, etc.
-So UV unwrapping should be done while these objects are still collection instances.
-When converting collection instances to real objects, the UV mapping should be preserved.
-
 ### Door Animations
 
 There are 8 doors, all of them with the same mechanism, but transformed to different places.
@@ -62,3 +56,13 @@ The animation armature is found in the “Door” collection.
 When creating the collection duplicates, the armatures need to be duplicated too, so they can be assigned different animation actions, and can get the final transformation applied individually.
 
 Because instantiating individual object duplicates (meshes, armatures) is “not yet implenented” in Blender 2.82, I append the collection instances to individual .blend files, and append them back into the main file.
+
+### Blender Files
+
+I have exported B3D from `minitram_konstal_105_assembled_7_2.blend`.
+As you can already guess, I needed several attempts until I got a working B3D export.
+
+First issue is that the B3D exporter frequently added hundreds of additional vertices, which damaged any UV mappings.
+The final result was to export to OBJ first, then reimport, add the animations from `minitram_konstal_105_doors_5.blend`, then export as B3D.
+
+You can look through Blender files with lower numbers at the end to find better organized modelling data, which is not ready for exporting though.
