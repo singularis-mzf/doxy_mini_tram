@@ -47,11 +47,11 @@ local konstal_105_definition = {
     doors = {
         open = {
             [-1] = {
-                frames = { x = 0, y = 25 };
+                frames = { x = 0, y = 23 }; -- Somehow there is bleed from the closing animation, so drop the last two frames.
                 time = 1; -- Time setting is broken; must be done in Blender.
             };
             [1] = {
-                frames = { x = 50, y = 75 };
+                frames = { x = 50, y = 73 };
                 time = 1;
             };
         };
