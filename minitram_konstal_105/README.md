@@ -66,3 +66,11 @@ First issue is that the B3D exporter frequently added hundreds of additional ver
 The final result was to export to OBJ first, then reimport, add the animations from `minitram_konstal_105_doors_5.blend`, then export as B3D.
 
 You can look through Blender files with lower numbers at the end to find better organized modelling data, which is not ready for exporting though.
+
+## Texture Baking
+
+I made a lot attempts to bake textures using Cycles in Blender 2.82.
+That failed very much.
+With Blender 3.0 (from snap), it worked fine.
+The Blender file used to bake textures is `minitram_konstal_105_assembled_7_3.blend`.
+It has the correct materials set for all used material slots.
