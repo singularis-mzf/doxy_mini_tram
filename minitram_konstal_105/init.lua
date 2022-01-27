@@ -7,7 +7,7 @@ local V = vector.new;
 
 local konstal_105_definition = {
     mesh = "minitram_konstal_105_normal.b3d";
-    textures = { "minitram_konstal_105_normal_base_texture.png" };
+    textures = { "minitram_konstal_105_normal_base_texture.png^(minitram_konstal_105_normal_livery_base.png^[multiply:#ff4400)" };
     drives_on = {
         default = true;
     };
