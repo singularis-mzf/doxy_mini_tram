@@ -15,13 +15,13 @@ local konstal_105_definition = {
     seats = {
         {
             name = S("Front Driver Stand");
-            attach_offset = V(-4, 10, 25);
+            attach_offset = V(-2, 2, 37);
             view_offset = V(0, 0, 0);
             group = "driver_stands";
         };
         {
             name = S("Passenger Area 1");
-            attach_offset = V(4, 10, 20);
+            attach_offset = V(3, 2, 39);
             view_offset = V(0, 0, 0);
             group = "passenger_area_1";
         };
@@ -67,8 +67,8 @@ local konstal_105_definition = {
         };
     };
     door_entry = { -3.5, 0, 3.5 };
-    visual_size = V(10, 10, 10); -- For Blender 1m = Minetest 1m scaling.
-    wagon_span = 4.5; -- Wagon length ~~ 8.5m => Coupling distance ~~ 9 m.
+    visual_size = V(1, 1, 1); -- For Blender 10m = Minetest 1m scaling. Scale 1:1 can not be used because that makes the player extremey big.
+    wagon_span = 4.6; -- Wagon length ~~ 8.8m => Coupling distance ~~ 9.2 m.
     is_locomotive = true;
     drops = { "default:steelblock 4" };
 };
