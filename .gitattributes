@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: CC0-1.0 OR MIT
 
 # This file must work with git-archive-all on ContentDB,
-# which is a bit buggy with the syntax.
-# Therefore, do not use trailing slashes.
-# This means, usually leading slashes must be used instead.
+# which is buggy with the syntax.
+/assets export-ignore
+*/assets export-ignore
+*/assets/ export-ignore
+*/assets/* export-ignore
 /screenshots export-ignore
 /LICENSES export-ignore
 .* export-ignore

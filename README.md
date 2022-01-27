@@ -4,18 +4,19 @@ SPDX-FileCopyrightText: 2022 David Hurka <doxydoxy@mailbox.org>
 SPDX-License-Identifier: MIT
 -->
 
-# TODO
+# doxy_mini_tram
 
-This will become a modpack with train models for the `advtrains` Minetest mod.
-In particular, there shall be a scaled down variant of the Konstal 105.
+This mod adds a Minitram Konstal 105 train model to `advtrains`, which is a scaled down variant of the Konstal 105N tram.
+
+![Screenshot of the Minitram Konstal 105 in preliminary livery.](screenshot.png)
 
 ## About
 
 On the LinuxForks Minetest server we realized that `advtrains` is missing train models which allow for a panoramic view.
 Therefore, it is currently not possible to make scenic railways with appropriate trains.
 
-The Konstal 105 train model shall fill this gap.
-The Konstal 105 is a tram series from eastern europe, which was built in huge numbers, and is now ubiquitious for most tram services in eastern europe.
+The Minitram Konstal 105 train model shall fill this gap.
+The Konstal 105N is a tram series from eastern europe, which was built in huge numbers, and is now ubiquitous for most tram services in eastern europe.
 
 Relevant for this mod is that it has an angular look, which is suitable for a low poly game like Minetest; and a length of only 13.5m, so it fits well in `advtrains`.
 But most important: it has really big windows!

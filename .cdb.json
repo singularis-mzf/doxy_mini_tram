@@ -2,6 +2,7 @@
     "forums": "TODO",
     "issue_tracker": "https://invent.kde.org/davidhurka/doxy_mini_tram/issues",
     "license": "MIT",
+    "media_license": "CC-BY-SA-4.0",
     "repo": "https://invent.kde.org/davidhurka/doxy_mini_tram.git",
     "tags": ["transport"],
     "type": "MOD",
