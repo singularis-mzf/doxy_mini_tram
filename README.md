@@ -4,7 +4,7 @@ SPDX-FileCopyrightText: 2022 David Hurka <doxydoxy@mailbox.org>
 SPDX-License-Identifier: MIT
 -->
 
-# doxy_mini_tram
+# doxy’s Minitram (doxy_mini_tram)
 
 This mod adds a Minitram Konstal 105 train model to `advtrains`, which is a scaled down variant of the Konstal 105N tram.
 
