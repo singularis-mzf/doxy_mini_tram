@@ -10,4 +10,7 @@
 */assets/* export-ignore
 /screenshots export-ignore
 /LICENSES export-ignore
+
+# These are not necessary for minetest.
 .* export-ignore
+*.license export-ignore
