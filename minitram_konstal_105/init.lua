@@ -70,6 +70,7 @@ local konstal_105_definition = {
     visual_size = V(1, 1, 1); -- For Blender 10m = Minetest 1m scaling. Scale 1:1 can not be used because that makes the player extremey big.
     wagon_span = 4.6; -- Wagon length ~~ 8.8m => Coupling distance ~~ 9.2 m.
     is_locomotive = true;
+    collisionbox = { -1.5, -0.5, -1.5, 1.5, 2.5, 1.5 };
     drops = { "default:steelblock 4" };
 };
 
