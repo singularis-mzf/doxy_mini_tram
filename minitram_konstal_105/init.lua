@@ -1,6 +1,11 @@
 -- SPDX-FileCopyrightText: 2022 David Hurka <doxydoxy@mailbox.org>
 --
 -- SPDX-License-Identifier: CC0-1.0 OR MIT
+--
+-- This file contains functions copied from the JR_E231series_modpack.
+-- https://git.bananach.space/JR_E231series_modpack.git
+-- SPDX-FileCopyrightText: 2019 Gabriel Pérez-Cerezo <gabriel@gpcf.eu>
+-- SPDX-License-Identifier: LGPL-2.1-only
 
 local S = minetest.get_translator("minitram_konstal_105");
 local V = vector.new;
@@ -136,7 +141,7 @@ Current livery: @3
 
                 -- Remove from stack if already used.
                 if persistent_data.livery.next_layer then
-                    current_color = layer.color;
+                    current_color = persistent_data.livery.component_stack[persistent_data.livery.next_layer].color;
                     table.remove(persistent_data.livery.component_stack, persistent_data.livery.next_layer);
                 end
 
@@ -200,9 +205,6 @@ end
 --! @param persistent_data advtrains data of the wagon.
 local function set_livery(self, puncher, itemstack, persistent_data)
     -- This function comes from the JR_E231series_modpack.
-    -- https://git.bananach.space/JR_E231series_modpack.git
-    -- SPDX-FileCopyrightText: 2019 Gabriel Pérez-Cerezo <gabriel@gpcf.eu>
-    -- SPDX-License-Identifier: LGPL-2.1-only
     local meta = itemstack:get_meta();
     local color = meta:get_string("paint_color");
     local alpha = meta:get_string("alpha");
@@ -222,6 +224,7 @@ end
 --! @param self A lua entity of the wagon definition.
 --! @param persistent_data advtrains data of the wagon.
 local function set_textures(self, persistent_data)
+    -- This function comes from the JR_E231series_modpack.
     if persistent_data.livery and persistent_data.livery.component_stack then
         local textures = { self.base_texture };
         for _, layer in ipairs(persistent_data.livery.component_stack) do
@@ -241,7 +244,7 @@ end
 
 local konstal_105_definition = {
     mesh = "minitram_konstal_105_normal.b3d";
-    textures = { "minitram_konstal_105_normal_base_texture.png^(minitram_konstal_105_normal_livery_base.png^[multiply:#ff8822)" }; -- Fallback for when the livery system is disabled.
+    textures = { "minitram_konstal_105_normal_base_texture.png^(minitram_konstal_105_normal_livery_base.png^[multiply:#ff8822)^(minitram_konstal_105_normal_livery_window_strip.png^[multiply:#131313)" }; -- Fallback for when the livery system is disabled.
     drives_on = {
         default = true;
     };
@@ -302,13 +305,17 @@ local konstal_105_definition = {
     };
     door_entry = { -3.5, 0, 3.5 };
     visual_size = V(1, 1, 1); -- For Blender 10m = Minetest 1m scaling. Scale 1m = 1m can not be used because that makes the player extremey big.
-    wagon_span = 4.6; -- Wagon length ~~ 8.8m => Coupling distance ~~ 9.2 m.
+    wagon_span = 4.7; -- Wagon length ~~ 8.9m => Coupling distance ~~ 9.4 m.
     is_locomotive = true;
     collisionbox = { -1.5, -0.5, -1.5, 1.5, 2.5, 1.5 };
     livery_components = {
         {
             description = S("Base livery");
             texture_file = "minitram_konstal_105_normal_livery_base.png";
+        };
+        {
+            description = S("Window background strip");
+            texture_file = "minitram_konstal_105_normal_livery_window_strip.png";
         };
     };
     base_texture = "minitram_konstal_105_normal_base_texture.png";
@@ -317,6 +324,10 @@ local konstal_105_definition = {
             {
                 component = 1;
                 color = "#ff8822";
+            };
+            {
+                component = 2;
+                color = "#131313";
             };
         };
         next_layer = 1;
