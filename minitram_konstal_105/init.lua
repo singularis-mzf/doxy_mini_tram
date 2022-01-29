@@ -244,7 +244,7 @@ end
 
 local konstal_105_definition = {
     mesh = "minitram_konstal_105_normal.b3d";
-    textures = { "minitram_konstal_105_normal_base_texture.png^(minitram_konstal_105_normal_livery_base.png^[multiply:#ff8822)^(minitram_konstal_105_normal_livery_window_strip.png^[multiply:#131313)" }; -- Fallback for when the livery system is disabled.
+    textures = { "minitram_konstal_105_normal_base_texture.png" }; -- Contains initial livery, necessary as fallback.
     drives_on = {
         default = true;
     };
@@ -310,12 +310,48 @@ local konstal_105_definition = {
     collisionbox = { -1.5, -0.5, -1.5, 1.5, 2.5, 1.5 };
     livery_components = {
         {
-            description = S("Base livery");
-            texture_file = "minitram_konstal_105_normal_livery_base.png";
+            description = S("Side walls");
+            texture_file = "minitram_konstal_105_normal_livery_walls.png";
         };
         {
             description = S("Window background strip");
             texture_file = "minitram_konstal_105_normal_livery_window_strip.png";
+        };
+        {
+            description = S("Doors");
+            texture_file = "minitram_konstal_105_normal_livery_doors.png";
+        };
+        {
+            description = S("Lower skirt");
+            texture_file = "minitram_konstal_105_normal_livery_skirt.png";
+        };
+        {
+            description = S("Front Area");
+            texture_file = "minitram_konstal_105_normal_livery_front.png";
+        };
+        {
+            description = S("Back Area");
+            texture_file = "minitram_konstal_105_normal_livery_back.png";
+        };
+        {
+            description = S("Stripes on skirt");
+            texture_file = "minitram_konstal_105_normal_livery_stripes.png";
+        };
+        {
+            description = S("Window detail");
+            texture_file = "minitram_konstal_105_normal_livery_window_detail.png";
+        };
+        {
+            description = S("Bumper");
+            texture_file = "minitram_konstal_105_normal_livery_bumper.png";
+        };
+        {
+            description = S("Bumper bar");
+            texture_file = "minitram_konstal_105_normal_livery_bumper_bar.png";
+        };
+        {
+            description = S("Front lights");
+            texture_file = "minitram_konstal_105_normal_livery_lights.png";
         };
     };
     base_texture = "minitram_konstal_105_normal_base_texture.png";
@@ -323,11 +359,23 @@ local konstal_105_definition = {
         component_stack = {
             {
                 component = 1;
-                color = "#ff8822";
+                color = "#ffa200";
+            };
+            {
+                component = 4;
+                color = "#ea0303";
+            };
+            {
+                component = 9;
+                color = "#080809";
+            };
+            {
+                component = 8;
+                color = "#131413";
             };
             {
                 component = 2;
-                color = "#131313";
+                color = "#0f0f0e";
             };
         };
         next_layer = 1;
