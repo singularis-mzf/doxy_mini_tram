@@ -46,7 +46,7 @@ local function calculate_livery(player, wagon_definition, persistent_data, color
 
     -- Initialize component stack.
     if type(persistent_data.livery) ~= "table" then
-        persistent_data.livery = wagon_definition.initial_livery;
+        persistent_data.livery = table.copy(wagon_definition.initial_livery);
     end
 
     -- A meta painting operation is when the player chooses certain special
