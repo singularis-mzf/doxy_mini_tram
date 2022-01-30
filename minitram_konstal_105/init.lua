@@ -5,77 +5,79 @@
 local S = minetest.get_translator("minitram_konstal_105");
 local V = vector.new;
 
-local livery_components = {
-    {
-        description = S("Side walls");
-        texture_file = "minitram_konstal_105_normal_livery_walls.png";
-    };
-    {
-        description = S("Window background strip");
-        texture_file = "minitram_konstal_105_normal_livery_window_strip.png";
-    };
-    {
-        description = S("Doors");
-        texture_file = "minitram_konstal_105_normal_livery_doors.png";
-    };
-    {
-        description = S("Lower skirt");
-        texture_file = "minitram_konstal_105_normal_livery_skirt.png";
-    };
-    {
-        description = S("Front Area");
-        texture_file = "minitram_konstal_105_normal_livery_front.png";
-    };
-    {
-        description = S("Back Area");
-        texture_file = "minitram_konstal_105_normal_livery_back.png";
-    };
-    {
-        description = S("Stripes on skirt");
-        texture_file = "minitram_konstal_105_normal_livery_stripes.png";
-    };
-    {
-        description = S("Window detail");
-        texture_file = "minitram_konstal_105_normal_livery_window_detail.png";
-    };
-    {
-        description = S("Bumper");
-        texture_file = "minitram_konstal_105_normal_livery_bumper.png";
-    };
-    {
-        description = S("Bumper bar");
-        texture_file = "minitram_konstal_105_normal_livery_bumper_bar.png";
-    };
-    {
-        description = S("Front lights");
-        texture_file = "minitram_konstal_105_normal_livery_lights.png";
-    };
-};
-
-local initial_livery = {
-    component_stack = {
+local livery_definition = {
+    components = {
         {
-            component = 1;
-            color = "#ffa200";
+            description = S("Side walls");
+            texture_file = "minitram_konstal_105_normal_livery_walls.png";
         };
         {
-            component = 4;
-            color = "#ea0303";
+            description = S("Window background strip");
+            texture_file = "minitram_konstal_105_normal_livery_window_strip.png";
         };
         {
-            component = 9;
-            color = "#080809";
+            description = S("Doors");
+            texture_file = "minitram_konstal_105_normal_livery_doors.png";
         };
         {
-            component = 8;
-            color = "#131413";
+            description = S("Lower skirt");
+            texture_file = "minitram_konstal_105_normal_livery_skirt.png";
         };
         {
-            component = 2;
-            color = "#0f0f0e";
+            description = S("Front Area");
+            texture_file = "minitram_konstal_105_normal_livery_front.png";
+        };
+        {
+            description = S("Back Area");
+            texture_file = "minitram_konstal_105_normal_livery_back.png";
+        };
+        {
+            description = S("Stripes on skirt");
+            texture_file = "minitram_konstal_105_normal_livery_stripes.png";
+        };
+        {
+            description = S("Window detail");
+            texture_file = "minitram_konstal_105_normal_livery_window_detail.png";
+        };
+        {
+            description = S("Bumper");
+            texture_file = "minitram_konstal_105_normal_livery_bumper.png";
+        };
+        {
+            description = S("Bumper bar");
+            texture_file = "minitram_konstal_105_normal_livery_bumper_bar.png";
+        };
+        {
+            description = S("Front lights");
+            texture_file = "minitram_konstal_105_normal_livery_lights.png";
         };
     };
-    next_layer = 1;
+    base_texture_file = "minitram_konstal_105_normal_base_texture.png";
+    initial_livery = {
+        layers = {
+            {
+                component = 1;
+                color = "#ffa200";
+            };
+            {
+                component = 4;
+                color = "#ea0303";
+            };
+            {
+                component = 9;
+                color = "#080809";
+            };
+            {
+                component = 8;
+                color = "#131413";
+            };
+            {
+                component = 2;
+                color = "#0f0f0e";
+            };
+        };
+        next_layer = 1;
+    };
 };
 
 local konstal_105_definition = {
@@ -144,10 +146,9 @@ local konstal_105_definition = {
     wagon_span = 4.7; -- Wagon length ~~ 8.9m => Coupling distance ~~ 9.4 m.
     is_locomotive = true;
     collisionbox = { -1.5, -0.5, -1.5, 1.5, 2.5, 1.5 };
-    base_texture = "minitram_konstal_105_normal_base_texture.png";
     drops = { "default:steelblock 4" };
 };
 
-multi_component_liveries.setup_advtrains_wagon(konstal_105_definition, livery_components, initial_livery);
+multi_component_liveries.setup_advtrains_wagon(konstal_105_definition, livery_definition);
 
 advtrains.register_wagon("minitram_konstal_105:minitram_konstal_105_normal", konstal_105_definition, S("Minitram Konstal 105 Two-Way Version"), "black.png");
