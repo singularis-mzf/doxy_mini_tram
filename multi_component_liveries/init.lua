@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
 --
--- This file contains functions copied from the JR_E231series_modpack.
+-- This file contains code from the JR_E231series_modpack.
 -- https://git.bananach.space/JR_E231series_modpack.git
 -- SPDX-FileCopyrightText: 2019 Gabriel Pérez-Cerezo <gabriel@gpcf.eu>
 -- SPDX-License-Identifier: LGPL-2.1-only
@@ -16,6 +16,7 @@ multi_component_liveries = {};
 --!
 --! @returns components r, g, b, a; each as integer 0..255 or nil; or nil on failure.
 function multi_component_liveries.get_components_from_painting_tool(playername, itemstack)
+    -- This function contains code from the JR_E231series_modpack.
     local meta = itemstack:get_meta();
     local color = meta:get_string("paint_color");
     local alpha = meta:get_string("alpha");
@@ -273,7 +274,7 @@ end
 --! @param itemstack The tool used by the player. Carries color data.
 --! @param persistent_data advtrains data of the wagon.
 function multi_component_liveries.set_livery(self, puncher, itemstack, persistent_data)
-    -- This function comes from the JR_E231series_modpack.
+    -- This function has been adapted from the JR_E231series_modpack.
     if type(persistent_data.livery) ~= "table" then
         persistent_data.livery = {};
     end
@@ -294,7 +295,7 @@ end
 --! @param self A lua entity of the wagon definition.
 --! @param persistent_data advtrains data of the wagon.
 function multi_component_liveries.set_textures(self, persistent_data)
-    -- This function comes from the JR_E231series_modpack.
+    -- This function has been adapted from the JR_E231series_modpack.
     local layers = persistent_data.livery;
     local definition = self.livery_definition;
     local texture = multi_component_liveries.calculate_texture_string(definition, layers);
