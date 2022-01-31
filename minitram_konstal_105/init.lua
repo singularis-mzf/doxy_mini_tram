@@ -76,7 +76,7 @@ local livery_definition = {
                 color = "#0f0f0e";
             };
         };
-        next_layer = 1;
+        active_layer = 1;
     };
 };
 
