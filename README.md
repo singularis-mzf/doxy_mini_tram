@@ -22,7 +22,20 @@ Relevant for this mod is that it has an angular look, which is suitable for a lo
 But most important: it has really big windows!
 The windows are even bigger than busses use to have, so the nickname “aquarium” is not that bad. ;)
 
-This modpack contains the mod `minitram_konstal_105`, which contains the “Minitram Konstal 105” train model.
+## Mods in this modpack
+
+### minitram_konstal_105
+
+Contains the “Minitram Konstal 105” train model.
+
+### minitram_konstal_105_liveries
+
+Contains 11 livery layers for the Minitram Konstal 105, which can be painted using the `bike_painter` painting tool from the `bike` mod. (Paint `#000000` 0% Alpha for help.)
+
+### multi_component_liveries
+
+Contains the logic used by `minitram_konstal_105_liveries`.
+Will probably be released as independent library mod.
 
 ## Installation
 
