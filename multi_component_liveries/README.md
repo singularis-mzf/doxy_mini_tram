@@ -97,3 +97,28 @@ As soon as advtrains gains official/stable livery API, this interface of this li
 ### How to use the advtrains interface
 
 Create a livery_definition table as described above, and apply it to your wagon definition using `multi_component_liveries.setup_advtrains_wagon()`.
+
+### How to use together with line number display
+
+multi_component_liveries does not support line number displays.
+Therefore, your model must use different texture slots for the livery and the line number displays.
+Pass the livery slot to `setup_advtrains_wagon()`.
+
+If you make your model with Blender and the `io_scene_b3d` B3D exporter, you need to make sure that everything affected by the livery must be only one mesh with only one material.
+Join multiple mesh objects like usual with the _Join_ tool.
+
+After joining meshes, your animations are probably broken.
+To fix them, create a new armature object, which has one bone for every animated part.
+This bone needs _Copy Location_ and _Copy Rotation_ constraints, which reference the bone with existing animation.
+Then, apply _Bake Action_ to the armature, using _Visual Keying_ and _Bake Data = Bone_ options.
+Now, you have exactly one armature, which is self-contained with all animations.
+
+The _Join_ tool preserves vertex groups.
+This means you need to make sure vertex group names do not collide, _before_ joining the meshes.
+
+Finally, add _Armature Deform_ modifiers to the mesh, one modifier per bone.
+These modifiers are unfortunately not preserved by the _Join_ tool.
+
+Now you can export the model as B3D, with all animations on the single mesh, and only one texture slot for this mesh.
+
+The Minetest Lua API allows you to set different textures for every texure slot, and multi_component_liveries will update only one of these textures.
