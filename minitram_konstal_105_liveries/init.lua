@@ -2,7 +2,7 @@
 --
 -- SPDX-License-Identifier: CC0-1.0 OR MIT
 
-local S = minetest.get_translator("minitram_konstal_105");
+local S = minetest.get_translator("minitram_konstal_105_liveries");
 
 minitram_konstal_105_liveries = {};
 
