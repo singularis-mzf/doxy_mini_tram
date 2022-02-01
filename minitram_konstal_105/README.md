@@ -57,13 +57,30 @@ When creating the collection duplicates, the armatures need to be duplicated too
 
 Because instantiating individual object duplicates (meshes, armatures) is “not yet implenented” in Blender 2.82, I append the collection instances to individual .blend files, and append them back into the main file.
 
+### Line Number Signs
+
+Line number signs need an individual texture slot.
+The reason for this is explained in the multi_component_liveries mod.
+
+This also means that the rest needs to utilize only one (the second) texture slot.
+So I have joined all the meshes and removed all but one material.
+The line number signs are a second mesh with another material.
+
+To apply all 8 door animations to the one mesh, which is usually not possible with the B3D exporter, I have collected all animations in a “copy” armature.
+This procedure is somewhat outlined in the multi_component_liveries mod.
+The original armatures with editable animations are no longer present.
+
 ### Blender Files
 
-I have exported B3D from `minitram_konstal_105_assembled_7_2.blend`.
+I have exported B3D from `minitram_konstal_105_assembled_7_2_2.blend`.
 As you can already guess, I needed several attempts until I got a working B3D export.
 
 First issue is that the B3D exporter frequently added hundreds of additional vertices, which damaged any UV mappings.
 The final result was to export to OBJ first, then reimport, add the animations from `minitram_konstal_105_doors_5.blend`, then export as B3D.
+This stage is at `minitram_konstal_105_assembled_7_2.blend`.
+
+Next issue is that this model contains multiple mesh objects with many materials, which results in many texture slots being present in the B3D.
+To fix this, I have done the stuff from [Line Number Signs], resulting in `minitram_konstal_105_assembled_7_2_2.blend`.
 
 You can look through Blender files with lower numbers at the end to find better organized modelling data, which is not ready for exporting though.
 
