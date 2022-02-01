@@ -31,6 +31,14 @@ This mod is intended to be installed from Minetest’s own content manager, [Con
 You can also clone the repository to your `mods` folder.
 You will need to disable the “LICENSES” and “screenshots” mods, if your Minetest can not figure out that these aren’t mods.
 
+You can also use this `bash` command from the root directoy of the repository:
+
+```bash
+git archive --format tar HEAD | tar --extract --one-top-level=doxy_mini_tram --directory=path/to/minetest/mods/
+```
+
+(Using GNU tar.)
+
 ## License
 
 The mod is licensed as CC-BY-SA-4.0 (media) and MIT (code).

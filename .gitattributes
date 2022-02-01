@@ -2,14 +2,12 @@
 #
 # SPDX-License-Identifier: CC0-1.0 OR MIT
 
-# This file must work with git-archive-all on ContentDB,
-# which is buggy with the syntax.
-/assets export-ignore
-*/assets export-ignore
-*/assets/ export-ignore
-*/assets/* export-ignore
-/screenshots export-ignore
-/LICENSES export-ignore
+# Leading **/ are understood by git-archive and git-archive-all.
+# ContentDB simply ignores .gitattributes when importing repositories,
+# so there is nothing that can be done here.
+**/assets export-ignore
+**/screenshots export-ignore
+**/LICENSES export-ignore
 
 # These are not necessary for minetest.
 .* export-ignore
