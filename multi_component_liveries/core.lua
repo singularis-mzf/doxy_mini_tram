@@ -115,8 +115,10 @@ end
 --! Initializes the livery stack @p livery_stack in case it does not
 --! contain livery data yet.
 function multi_component_liveries.initialize_stack(livery_definition, livery_stack)
-    livery_stack.layers = table.copy(livery_definition.initial_livery.layers);
-    livery_stack.active_layer = livery_definition.initial_livery.active_layer;
+    if not livery_stack.layers then
+        livery_stack.layers = table.copy(livery_definition.initial_livery.layers);
+        livery_stack.active_layer = livery_definition.initial_livery.active_layer;
+    end
 end
 
 

@@ -244,12 +244,12 @@ describe("paint_on_livery()", function()
         assert.same({ result = true; stack = simple_liv_prepended(); },
                     paint(simple_def(), simple_liv_appended(), "#00010100"));
         assert.same({ result = true; stack = select_layer(simple_liv_appended(), 2); },
-                    paint(simple_def(), simple_liv_prepended(), "#00020200"));
+                    paint(simple_def(), simple_liv_prepended(), "#00010200"));
     end);
 
     it("does not move layers past the end", function()
         assert.same({ result = true; stack = select_layer(simple_liv_appended(), 2); },
-                    paint(simple_def(), simple_liv_prepended(), "#0002fe00"));
+                    paint(simple_def(), simple_liv_prepended(), "#0001fe00"));
     end);
 
     it("does not modify anything if moving selected layer to current position", function()
@@ -273,14 +273,14 @@ describe("paint_on_livery()", function()
     end);
 
     it("does not modify anything if removing missing layer", function()
-        assert.same({ result = false; stack = select_layer(simple_liv(), nil); },
+        assert.same({ result = false; stack = simple_liv(); },
                     paint(simple_def(), simple_liv(), "#0001ff00"));
     end);
 
     it("removes invalid layers if present", function()
         assert.same({ result = true; stack = select_layer(simple_liv(), nil); },
                     paint(simple_def(), invalid_layer_liv(), "#0005ff00"));
-        assert.same({ result = true; stack = select_layer(simple_liv(), nil); },
+        assert.same({ result = false; stack = simple_liv(); },
                     paint(simple_def(), simple_liv(), "#0005ff00"));
     end);
 
