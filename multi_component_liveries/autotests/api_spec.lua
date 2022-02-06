@@ -337,4 +337,20 @@ describe("calculate_texture_string()", function()
         assert.same("base.png",
                     cts(simple_def(), {}));
     end);
+
+    it("Uses base image for uninitialized livery", function()
+        assert.same("base.png",
+                    cts(simple_def(), {}));
+    end);
+end);
+
+describe("Support for advtrains wagons which historically have strings as livery property", function()
+    describe("calculate_texture_string()", function()
+        local cts = multi_component_liveries.calculate_texture_string;
+
+        it("Returns base livery if it receives a string instead of a livery stack", function()
+            assert.same("base.png",
+                        cts(simple_def(), "base.png^(comp1.png^[multiply:#112233)"));
+        end);
+    end);
 end);

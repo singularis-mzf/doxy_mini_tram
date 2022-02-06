@@ -317,6 +317,7 @@ function multi_component_liveries.set_textures(self, persistent_data)
     local layers = persistent_data.livery;
     local definition = self.livery_definition;
     local texture = multi_component_liveries.calculate_texture_string(definition, layers);
+
     local textures = self.object:get_properties().textures;
     textures[self.livery_texture_slot] = texture;
     self.object:set_properties({
