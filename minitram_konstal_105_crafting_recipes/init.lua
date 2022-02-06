@@ -4,124 +4,100 @@
 
 local S = minetest.get_translator("minitram_crafting_recipes");
 
-minitram_crafting_recipes = {};
+--! Returns the first registered item name from the list @p names.
+--! The empty string is considered registered.
+--! If none is registered, prints a warning message.
+local function choose(names)
+    for _, name in ipairs(names) do
+        if name == "" or minetest.registered_items[names] then
+            return name;
+        end
+    end
 
-local steel_ingot = nil;
-if minetest.registered_items["technic:carbon_steel_ingot"] then
-    steel_ingot = "technic:carbon_steel_ingot";
-else
-    steel_ingot = "default:steel_ingot";
+    minetest.log("warning", "minitram_crafting_recipes: None of these items is registered: '" .. table.concat(names, "', '") .. "'");
+    return "";
 end
 
-local steel_plate = nil;
-if minetest.registered_items["default:ladder_steel"] then
-    steel_plate = "default:ladder_steel";
-elseif minetest.registered_items["technic:carbon_steel_ingot"] then
-    steel_plate = "technic:carbon_steel_ingot";
-else
-    steel_plate = steel_ingot;
-end
+local steel_ingot = choose({
+    "technic:carbon_steel_ingot";
+    "default:steel_ingot";
+});
 
--- Minitram pretends to run on battery if technic is available.
-local battery = nil;
-if minetest.registered_items["technic:blue_energy_crystal"] then
-    battery = "technic:blue_energy_crystal";
-elseif minetest.registered_items["basic_materials:energy_crystal_simple"] then
-    battery = "basic_materials:energy_crystal_simple";
-else
-    battery = "";
-end
+local steel_plate = choose({
+    "default:ladder_steel";
+    "technic:carbon_steel_ingot";
+    steel_ingot;
+});
 
-local controller = nil;
-if minetest.registered_items["technic:control_logic_unit"] then
-    controller = "technic:control_logic_unit";
-elseif minetest.registered_items["mesecons_luacontroller:luacontroller0000"] then
-    controller = "mesecons_luacontroller:luacontroller0000";
-elseif minetest.registered_items["mesecons_microcontroller:microcontroller0000"] then
-    controller = "mesecons_microcontroller:microcontroller0000";
-elseif minetest.registered_items["basic_materials:ic"] then
-    controller = "basic_materials:ic";
-else
-    controller = "";
-end
+-- Minitram pretends to run on battery, that is why the pantograph is lowered.
+local battery = choose({
+    "technic:blue_energy_crystal";
+    "basic_materials:energy_crystal_simple";
+    "";
+});
 
-local door = nil;
-if minetest.registered_items["doors:door_steel"] then
-    door = "doors:door_steel";
-else
-    door = steel_plate;
-end
+local controller = choose({
+    "technic:control_logic_unit";
+    "mesecons_luacontroller:luacontroller0000";
+    "mesecons_microcontroller:microcontroller0000";
+    "basic_materials:ic";
+    "";
+});
 
-local gem = nil;
-if minetest.registered_items["default:mese_crystal"] then
-    gem = "default:mese_crystal";
-else
-    gem = "";
-end
+local door = choose({
+    "doors:door_steel";
+    steel_plate;
+});
 
-local gear = nil;
-if minetest.registered_items["basic_materials:gear_steel"] then
-    gear = "basic_materials:gear_steel";
-elseif minetest.registered_items["carts:rail"] then
-    gear = "carts:rail";
-elseif minetest.registered_items["default:ladder_steel"] then
-    gear = "default:ladder_steel";
-else
-    gear = "";
-end
+local gem = choose({
+    "default:mese_crystal";
+    "";
+});
 
-local glass = nil;
-if minetest.registered_items["xpanes:obsidian_pane_flat"] then
-    glass = "xpanes:obsidian_pane_flat";
-elseif minetest.registered_items["default:obsidian_glass"] then
-    glass = "default:obsidian_glass";
-else
-    glass = "default:glass";
-end
+local gear = choose({
+    "basic_materials:gear_steel";
+    "carts:rail";
+    "default:ladder_steel";
+    "";
+});
 
-local graphite = nil;
-if minetest.registered_items["technic:graphite_rod"] then
-    graphite = "technic:graphite_rod";
-elseif minetest.registered_items["mesecons:wire_00000000_off"] then
-    graphite = "mesecons:wire_00000000_off";
-else
-    graphite = "default:coal_lump";
-end
+local glass = choose({
+    "xpanes:obsidian_pane_flat";
+    "default:obsidian_glass";
+    "default:glass";
+});
 
-local insulator = nil;
-if minetest.registered_items["technic:rubber"] then
-    insulator = "technic:rubber";
-elseif minetest.registered_items["mesecons_materials:fiber"] then
-    insulator = "mesecons_materials:fiber";
-elseif minetest.registered_items["basic_materials:cement_block"] then
-    insulator = "basic_materials:cement_block";
-else
-    insulator = "default:clay_brick";
-end
+local graphite = choose({
+    "technic:graphite_rod";
+    "mesecons:wire_00000000_off";
+    "default:coal_lump";
+});
+
+local insulator = choose({
+    "technic:rubber";
+    "mesecons_materials:fiber";
+    "basic_materials:cement_block";
+    "default:clay_brick";
+});
 
 -- Lighting in crafting recipes.
 -- Unfortunately, these mods do not provide groups like technical_light.
-local lamp = nil;
-if minetest.registered_items["morelights_modern:bar_light"] then
-    lamp = "morelights_modern:bar_light";
-elseif minetest.registered_items["technic:lv_led"] then
-    lamp = "technic:lv_led";
-else
-    lamp = "default:meselamp";
-end
+local lamp = choose({
+    "morelights_modern:bar_light";
+    "technic:lv_led";
+    "default:meselamp";
+});
 
-local motor = nil;
-if minetest.registered_items["technic:motor"] then
-    motor = "technic:motor";
-elseif minetest.registered_items["basic_materials:motor"] then
-    motor = "basic_materials:motor";
-elseif minetest.registered_items["default:mese_crystal"] then
-    motor = "default:mese_crystal";
-else
-    motor = "";
-end
+local motor = choose({
+    "technic:motor";
+    "basic_materials:motor";
+    "default:mese_crystal";
+    "";
+});
 
-local paper = "default:paper";
+local paper = choose({
+    "default:paper";
+});
 
 -- Dynamic line number signs in crafting recipes.
 -- Unfortunately, these mods do not provide a sign group.
@@ -130,45 +106,38 @@ local sign = nil;
 local signs_modpath = minetest.get_modpath("signs");
 if signs_modpath and string.find(signs_modpath, "display_modpack", 1, --[[ plain ]] true) then
     sign = "group:display_api";
-elseif minetest.registered_items["digilines:lcd"] then
-    sign = "digilines:lcd";
 else
-    sign = "default:sign_wall_steel";
+    sign = choose({
+        "digilines:lcd";
+        "default:sign_wall_steel";
+    });
 end
 
-local steel_rod = nil;
-if minetest.registered_items["technic:rebar"] then
-    steel_rod = "technic:rebar";
-elseif minetest.registered_items["basic_materials:steel_bar"] then
-    steel_rod = "basic_materials:steel_bar";
-else
-    steel_rod = steel_ingot;
-end
+local steel_rod = choose({
+    "technic:rebar";
+    "basic_materials:steel_bar";
+    steel_ingot;
+});
 
-local steel_block = nil;
-if minetest.registered_items["technic:carbon_steel_block"] then
-    steel_block = "technic:carbon_steel_block";
-else
-    steel_block = "default:steelblock";
-end
+local steel_block = choose({
+    "technic:carbon_steel_block";
+    "default:steelblock";
+});
 
-local trapdoor = nil;
-if minetest.registered_items["doors:trapdoor_steel"] then
-    trapdoor = "doors:trapdoor_steel";
-elseif minetest.registered_items["doors:door_steel"] then
-    trapdoor = "doors:door_steel";
-else
-    trapdoor = steel_ingot;
-end
+local trapdoor = choose({
+    "doors:trapdoor_steel";
+    "doors:door_steel";
+    steel_ingot;
+});
 
-local wheel = "advtrains:wheel";
+local wheel = choose({
+    "advtrains:wheel"
+});
 
-local wool = nil;
-if minetest.registered_items["lrfurn:armchair_blue"] then
-    wool = "lrfurn:armchair_blue";
-else
-    wool = "wool:blue";
-end
+local wool = choose({
+    "lrfurn:armchair_blue";
+    "wool:blue";
+});
 
 local template = "minitram_crafting_recipes:minitram_template";
 minetest.register_craftitem(template, {
@@ -178,7 +147,6 @@ minetest.register_craftitem(template, {
     };
     inventory_image = "minitram_crafting_recipes_template.png";
 });
-
 minetest.register_craft({
     output = template;
     recipe = {
@@ -196,7 +164,6 @@ minetest.register_craftitem(seat, {
     };
     inventory_image = "minitram_crafting_recipes_seat_assembly.png";
 });
-
 minetest.register_craft({
     output = seat;
     recipe = {
@@ -214,7 +181,6 @@ minetest.register_craftitem(automatic_door, {
     };
     inventory_image = "minitram_crafting_recipes_door_assembly.png";
 });
-
 minetest.register_craft({
     output = automatic_door;
     type = "shapeless";
@@ -230,7 +196,6 @@ minetest.register_craftitem(pantograph, {
     };
     inventory_image = "minitram_crafting_recipes_pantograph.png";
 });
-
 minetest.register_craft({
     output = pantograph;
     recipe = {
@@ -249,7 +214,6 @@ minetest.register_craftitem(body, {
     };
     inventory_image = "minitram_crafting_recipes_konstal_105_body.png";
 });
-
 minetest.register_craft({
     output = body;
     recipe = {
@@ -269,7 +233,6 @@ minetest.register_craftitem(body_assembly, {
     };
     inventory_image = "minitram_crafting_recipes_konstal_105_body_assembly.png";
 });
-
 minetest.register_craft({
     output = body_assembly;
     recipe = {
@@ -288,7 +251,6 @@ minetest.register_craftitem(bogie, {
     };
     inventory_image = "minitram_crafting_recipes_bogie.png";
 });
-
 minetest.register_craft({
     output = bogie;
     recipe = {
