@@ -149,10 +149,12 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
     description = description and description.description;
     if layer ~= 255 and not description then
         -- Player wants to select an invalid component.
-        if has_alpha_channel then
-            minetest.chat_send_player(playername, S("There is no livery component with index @1. Paint #000000 0% for help.", component));
-        else
-            minetest.chat_send_player(playername, S("There is no livery component with index @1. Paint #000000 for help.", component));
+        if playername then
+            if has_alpha_channel then
+                minetest.chat_send_player(playername, S("There is no livery component with index @1. Paint #000000 0% for help.", component));
+            else
+                minetest.chat_send_player(playername, S("There is no livery component with index @1. Paint #000000 for help.", component));
+            end
         end
         return false;
     end
@@ -189,7 +191,9 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
         if existing_layer == layer then
             -- Component already at requested layer, select it.
             livery_stack.active_layer = existing_layer;
-            minetest.chat_send_player(playername, S("Now painting on livery component “@1” at layer @2.", description, layer));
+            if playername then
+                minetest.chat_send_player(playername, S("Now painting on livery component “@1” at layer @2.", description, layer));
+            end
             return false;
         end
 
@@ -209,10 +213,12 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
         local new_position = math.min(#livery_stack.layers + 1, layer);
         table.insert(livery_stack.layers, new_position, new_layer);
 
-        if existing_layer then
-            minetest.chat_send_player(playername, S("Now painting on livery component “@1”, moved to layer @2.", description, new_position));
-        else
-            minetest.chat_send_player(playername, S("Now painting on newly added livery component “@1” at layer @2.", description, new_position));
+        if playername then
+            if existing_layer then
+                minetest.chat_send_player(playername, S("Now painting on livery component “@1”, moved to layer @2.", description, new_position));
+            else
+                minetest.chat_send_player(playername, S("Now painting on newly added livery component “@1” at layer @2.", description, new_position));
+            end
         end
 
         -- Select for painting.
@@ -223,13 +229,17 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
         if existing_layer then
             table.remove(livery_stack.layers, existing_layer)
 
-            minetest.chat_send_player(playername, S("Removed livery component “@1” from layer @2.", description or component, existing_layer));
+            if playername then
+                minetest.chat_send_player(playername, S("Removed livery component “@1” from layer @2.", description or component, existing_layer));
+            end
 
             -- Deselect for painting.
             livery_stack.active_layer = nil;
             return true;
         else
-            minetest.chat_send_player(playername, S("Livery component “@1” not present.", description or component));
+            if playername then
+                minetest.chat_send_player(playername, S("Livery component “@1” not present.", description or component));
+            end
             return false;
         end
     end
