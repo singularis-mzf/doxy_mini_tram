@@ -121,6 +121,13 @@ local function invalid_layer_liv()
     return reverse;
 end
 
+--! Component 2 used twice.
+local function duplicate_layer_liv()
+    local duplicate = reverse_liv();
+    duplicate.layers[2].component = 2;
+    return duplicate;
+end
+
 --! No components present, no layer selected.
 local function empty_liv()
     return {
@@ -299,5 +306,35 @@ describe("paint_on_livery()", function()
     it("Does not paint if no layer selected", function()
         assert.same({ result = false; stack = select_layer(simple_liv(), nil); },
                     paint(simple_def(), select_layer(simple_liv(), nil), "#ff0000ff"));
+    end);
+end);
+
+describe("calculate_texture_string()", function()
+    local cts = multi_component_liveries.calculate_texture_string;
+
+    it("Creates valid texture strings from valid livery stacks", function()
+        assert.same("base.png^(comp2.png^[multiply:#123456)",
+                    cts(simple_def(), simple_liv()));
+        assert.same("base.png^(comp2.png^[multiply:#ff0000)",
+                    cts(simple_def(), red_liv()));
+        assert.same("base.png^(comp2.png^[multiply:#123456)^(comp1.png^[multiply:#654321)",
+                    cts(simple_def(), reverse_liv()));
+        assert.same("base.png",
+                    cts(simple_def(), empty_liv()));
+    end);
+
+    it("Does not care about duplicate layers", function()
+        assert.same("base.png^(comp2.png^[multiply:#123456)^(comp2.png^[multiply:#654321)",
+                    cts(simple_def(), duplicate_layer_liv()));
+    end);
+
+    it("Skips invalid layers", function()
+        assert.same("base.png^(comp2.png^[multiply:#123456)",
+                    cts(simple_def(), invalid_layer_liv()));
+    end);
+
+    it("Uses base image for uninitialized livery", function()
+        assert.same("base.png",
+                    cts(simple_def(), {}));
     end);
 end);
