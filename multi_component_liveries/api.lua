@@ -139,7 +139,7 @@ function multi_component_liveries.calculate_texture_string(livery_definition, li
         return "";
     end
 
-    if not livery_stack then
+    if not (livery_stack and livery_stack.layers) then
         return livery_definition.base_texture_file;
     end
 
