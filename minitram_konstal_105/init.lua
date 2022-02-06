@@ -83,4 +83,10 @@ if minitram_konstal_105_liveries and minitram_konstal_105_liveries.add_liveries_
     minitram_konstal_105_liveries.add_liveries_konstal_105(konstal_105_definition);
 end
 
-advtrains.register_wagon("minitram_konstal_105:minitram_konstal_105_normal", konstal_105_definition, S("Minitram Konstal 105 Bidirectional Version"), "black.png");
+local item_name = "minitram_konstal_105:minitram_konstal_105_normal"
+advtrains.register_wagon(item_name, konstal_105_definition, S("Minitram Konstal 105\nKonstal 111N adapted to advtrains gauge."), "minitram_konstal_105_normal_inv.png");
+
+-- Add group to e. g. allow crafting templates from this wagon.
+local groups = table.copy(minetest.registered_items[item_name].groups);
+groups.minitram = 1;
+minetest.override_item(item_name, { groups = groups });
