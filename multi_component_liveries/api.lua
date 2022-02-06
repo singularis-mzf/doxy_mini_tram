@@ -86,7 +86,7 @@
 --!
 --! Components available for @p livery_stack are defined in @p livery_definition.
 --!
---! @p player is a player ObjectRef.
+--! @p player is a player ObjectRef (optional).
 --! @p livery_stack is a livery_stack.
 --! @p livery_definition is a livery_definition.
 --! @p tool is the itemstack of the painting tool.
@@ -95,12 +95,6 @@
 function multi_component_liveries.paint_on_livery(player, livery_definition, livery_stack, tool)
     local playername = player and player.is_player and player:is_player() and player:get_player_name();
     local r, g, b, a = multi_component_liveries.get_components_from_painting_tool(playername, tool);
-
-    -- Initialize layer stack.
-    if not livery_stack.layers then
-        livery_stack.layers = table.copy(livery_definition.initial_livery.layers);
-        livery_stack.active_layer = livery_definition.initial_livery.active_layer;
-    end
 
     -- A meta painting operation is when the player chooses certain special
     -- colors, e. g. to choose which livery layer shall be painted next.
@@ -123,6 +117,7 @@ function multi_component_liveries.paint_on_livery(player, livery_definition, liv
             return false;
         elseif g <= 254 then
             -- Livery component selection requested.
+            multi_component_liveries.initialize_stack(livery_definition, livery_stack);
             local component = g;
             local layer = b;
             return multi_component_liveries.select_livery_component(playername, livery_stack, livery_definition, component, layer);
@@ -133,6 +128,7 @@ function multi_component_liveries.paint_on_livery(player, livery_definition, liv
         end
     else
         -- Non-meta color painted.
+        multi_component_liveries.initialize_stack(livery_definition, livery_stack);
         return multi_component_liveries.paint_active_layer(playername, livery_stack, string.format("#%02x%02x%02x", r, g, b));
     end
 end

@@ -6,6 +6,7 @@
 # ContentDB simply ignores .gitattributes when importing repositories,
 # so there is nothing that can be done here.
 **/assets export-ignore
+**/autotests export-ignore
 **/screenshots export-ignore
 **/LICENSES export-ignore
 

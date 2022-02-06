@@ -112,6 +112,14 @@ Current livery: @3
     minetest.chat_send_player(playername, help_text);
 end
 
+--! Initializes the livery stack @p livery_stack in case it does not
+--! contain livery data yet.
+function multi_component_liveries.initialize_stack(livery_definition, livery_stack)
+    livery_stack.layers = table.copy(livery_definition.initial_livery.layers);
+    livery_stack.active_layer = livery_definition.initial_livery.active_layer;
+end
+
+
 --! Selects the next layer to be painted in @p livery_stack.
 --!
 --! @param playername Feedback messages are sent to this player.
@@ -177,6 +185,7 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
             return false;
         end
     elseif layer >= 1 and layer <= 254 then
+        -- Insert component in the layer stack.
         if existing_layer == layer then
             -- Component already at requested layer, select it.
             livery_stack.active_layer = existing_layer;
@@ -184,7 +193,6 @@ function multi_component_liveries.select_livery_component(playername, livery_sta
             return false;
         end
 
-        -- Insert component in the layer stack.
         local current_color = "#ff00ff"; -- Magenta, as fallback.
 
         -- Remove from stack if already used.
