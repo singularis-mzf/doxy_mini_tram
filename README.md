@@ -32,6 +32,12 @@ Contains the “Minitram Konstal 105” train model.
 
 Contains 11 livery layers for the Minitram Konstal 105, which can be painted using the `bike_painter` painting tool from the `bike` mod. (Paint `#000000` 0% Alpha for help.)
 
+### minitram_crafting_recipes
+
+Contains crafting recipes and several intermediate craft items for the Minitram Konstal 105.
+In the future, these intermediate craft items would be used for any additional Minitram vehicles.
+This mod contains compatibility code for several other mods’ items.
+
 ### multi_component_liveries
 
 Contains the logic used by `minitram_konstal_105_liveries`.
