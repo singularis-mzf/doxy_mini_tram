@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: CC0-1.0 OR MIT
 
+variables:
+  DEBIAN_FRONTEND: "noninteractive"
+
 doxy_mini_tram_ci_reuse:
     image:
         name: fsfe/reuse:latest
