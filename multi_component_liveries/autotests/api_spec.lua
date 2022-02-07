@@ -153,23 +153,29 @@ local function simple_def()
     };
 end
 
+--! Creates a tool itemstack that has metadata with @c color and @c alpha.
+local function tool(color, alpha)
+    return {
+        get_meta = function(self)
+            return {
+                get_string = function(self, key)
+                    if key == "paint_color" then
+                        return color;
+                    elseif key == "alpha" then
+                        return alpha;
+                    end
+                end
+            };
+        end
+    };
+end
+
+
 describe("paint_on_livery()", function()
     local function paint(definition, stack, color, alpha)
         -- The tool which is passed to paint_on_livery().
         -- This needs to return metadata with a get_string() method.
-        local tool = {
-            get_meta = function(self)
-                return {
-                    get_string = function(self, key)
-                        if key == "paint_color" then
-                            return color;
-                        elseif key == "alpha" then
-                            return alpha;
-                        end
-                    end
-                };
-            end
-        };
+        local tool = tool(color, alpha);
 
         local result = multi_component_liveries.paint_on_livery(nil, definition, stack, tool);
 
@@ -344,13 +350,81 @@ describe("calculate_texture_string()", function()
     end);
 end);
 
+--! A pseudo wagon entity with simple_def() livery definition.
+local function wagon()
+    return {
+        livery_definition = simple_def();
+        set_textures = function() end;
+    };
+end
+
+
 describe("Support for advtrains wagons which historically have strings as livery property", function()
     describe("calculate_texture_string()", function()
         local cts = multi_component_liveries.calculate_texture_string;
 
         it("Returns base livery if it receives a string instead of a livery stack", function()
             assert.same("base.png",
-                        cts(simple_def(), "base.png^(comp1.png^[multiply:#112233)"));
+                        cts(simple_def(), "legacy_data"));
+        end);
+    end);
+
+    describe("set_livery()", function()
+        local sl = multi_component_liveries.set_livery;
+
+        it("Clears livery property if it is a string", function()
+            local puncher = {};
+
+            local itemstack = tool("#000000", 0);
+
+            local persistent_data = {
+                livery = "legacy_data";
+            };
+
+            sl(wagon(), puncher, itemstack, persistent_data);
+
+            assert.same({}, persistent_data.livery);
+        end);
+
+        it("Initializes livery property if it is a string", function()
+            local puncher = {};
+
+            local itemstack = tool("#ff0000");
+
+            local persistent_data = {
+                livery = "legacy_data";
+            };
+
+            sl(wagon(), puncher, itemstack, persistent_data);
+
+            assert.same(red_liv(), persistent_data.livery);
+        end);
+
+        it("Initializes livery property if it is missing", function()
+            local puncher = {};
+
+            local itemstack = tool("#ff0000");
+
+            local persistent_data = {
+                livery = nil;
+            };
+
+            sl(wagon(), puncher, itemstack, persistent_data);
+
+            assert.same(red_liv(), persistent_data.livery);
+        end);
+
+        it("Paints on livery property as usual if it is valid", function()
+            local puncher = {};
+
+            local persistent_data = {
+                livery = simple_liv();
+            };
+
+            sl(wagon(), puncher, tool("#000100", 0), persistent_data);
+            sl(wagon(), puncher, tool("#654321", 255), persistent_data);
+
+            assert.same(select_layer(reverse_liv(), 2), persistent_data.livery);
         end);
     end);
 end);
