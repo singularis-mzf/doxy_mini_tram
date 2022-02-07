@@ -140,8 +140,8 @@ end
 function multi_component_liveries.select_livery_component(playername, livery_stack, livery_definition, component, layer, has_alpha_channel)
     -- Find the layer of the selected component.
     local existing_layer = nil;
-    for i, layer in ipairs(livery_stack.layers) do
-        if layer.component == component then
+    for i, l in ipairs(livery_stack.layers) do
+        if l.component == component then
             existing_layer = i;
             break;
         end

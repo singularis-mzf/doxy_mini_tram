@@ -101,7 +101,7 @@ local paper = choose({
 
 -- Dynamic line number signs in crafting recipes.
 -- Unfortunately, these mods do not provide a sign group.
-local sign = nil;
+local sign;
 -- Make sure that the signs mod is the one from display_modpack.
 local signs_modpath = minetest.get_modpath("signs");
 if signs_modpath and string.find(signs_modpath, "display_modpack", 1, --[[ plain ]] true) then

@@ -154,11 +154,11 @@ local function simple_def()
 end
 
 --! Creates a tool itemstack that has metadata with @c color and @c alpha.
-local function tool(color, alpha)
+local function painting_tool(color, alpha)
     return {
-        get_meta = function(self)
+        get_meta = function(_self)
             return {
-                get_string = function(self, key)
+                get_string = function(_self1, key)
                     if key == "paint_color" then
                         return color;
                     elseif key == "alpha" then
@@ -175,7 +175,7 @@ describe("paint_on_livery()", function()
     local function paint(definition, stack, color, alpha)
         -- The tool which is passed to paint_on_livery().
         -- This needs to return metadata with a get_string() method.
-        local tool = tool(color, alpha);
+        local tool = painting_tool(color, alpha);
 
         local result = multi_component_liveries.paint_on_livery(nil, definition, stack, tool);
 
@@ -375,7 +375,7 @@ describe("Support for advtrains wagons which historically have strings as livery
         it("Clears livery property if it is a string", function()
             local puncher = {};
 
-            local itemstack = tool("#000000", 0);
+            local itemstack = painting_tool("#000000", 0);
 
             local persistent_data = {
                 livery = "legacy_data";
@@ -389,7 +389,7 @@ describe("Support for advtrains wagons which historically have strings as livery
         it("Initializes livery property if it is a string", function()
             local puncher = {};
 
-            local itemstack = tool("#ff0000");
+            local itemstack = painting_tool("#ff0000");
 
             local persistent_data = {
                 livery = "legacy_data";
@@ -403,7 +403,7 @@ describe("Support for advtrains wagons which historically have strings as livery
         it("Initializes livery property if it is missing", function()
             local puncher = {};
 
-            local itemstack = tool("#ff0000");
+            local itemstack = painting_tool("#ff0000");
 
             local persistent_data = {
                 livery = nil;
@@ -421,8 +421,8 @@ describe("Support for advtrains wagons which historically have strings as livery
                 livery = simple_liv();
             };
 
-            sl(wagon(), puncher, tool("#000100", 0), persistent_data);
-            sl(wagon(), puncher, tool("#654321", 255), persistent_data);
+            sl(wagon(), puncher, painting_tool("#000100", 0), persistent_data);
+            sl(wagon(), puncher, painting_tool("#654321", 255), persistent_data);
 
             assert.same(select_layer(reverse_liv(), 2), persistent_data.livery);
         end);

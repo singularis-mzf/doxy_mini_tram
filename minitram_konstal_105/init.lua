@@ -50,10 +50,14 @@ local konstal_105_definition = {
         "passenger_area_1";
     };
     doors = {
+        -- Somehow there is bleed from the closing animation,
+        -- so drop the last two frames of the opening animation.
+        --
+        -- Time setting is broken; must be done in Blender.
         open = {
             [-1] = {
-                frames = { x = 0, y = 23 }; -- Somehow there is bleed from the closing animation, so drop the last two frames.
-                time = 1; -- Time setting is broken; must be done in Blender.
+                frames = { x = 0, y = 23 };
+                time = 1;
             };
             [1] = {
                 frames = { x = 50, y = 73 };
@@ -72,7 +76,11 @@ local konstal_105_definition = {
         };
     };
     door_entry = { -3.5, 0, 3.5 };
-    visual_size = V(1, 1, 1); -- For Blender 10m = Minetest 1m scaling. Scale 1m = 1m can not be used because that makes the player extremey big.
+
+    -- This needs to be 1, so Blender 10m = Minetest 1m.
+    -- If it was scaling to Blender 1m, the attached players would be huge.
+    visual_size = V(1, 1, 1);
+
     wagon_span = 4.7; -- Wagon length ~~ 8.9m => Coupling distance ~~ 9.4 m.
     is_locomotive = true;
     collisionbox = { -1.5, -0.5, -1.5, 1.5, 2.5, 1.5 };

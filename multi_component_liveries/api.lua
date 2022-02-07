@@ -101,7 +101,7 @@ function multi_component_liveries.paint_on_livery(player, livery_definition, liv
     local is_meta_color;
     if a then
         is_meta_color = r == 0 and a == 0;
-    else 
+    else
         is_meta_color = r == 0;
     end
 
@@ -161,7 +161,8 @@ end
 --! Adds methods to an advtrains wagon definition to implement livery paiting.
 --!
 --! @param wagon_definition The “wagon prototype” which you pass to register_wagon().
---! @param livery_definition A livery_definition table, defines the available livery components and initial livery for this wagon.
+--! @param livery_definition A livery_definition table,
+--!    defines the available livery components and initial livery for this wagon.
 --! @param slot Which texture slot shall be affected by the livery.
 --! @see livery_definition, livery_stack.
 function multi_component_liveries.setup_advtrains_wagon(wagon_definition, livery_definition, slot)
