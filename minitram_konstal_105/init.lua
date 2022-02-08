@@ -20,14 +20,14 @@ local konstal_105_definition = {
     seats = {
         {
             name = S("Front Driver Stand");
-            attach_offset = V(-2, 2, 37);
-            view_offset = V(0, 0, 0);
+            attach_offset = V(-2, 2, 34);
+            view_offset = V(0, 0, 2);
             group = "driver_stands";
         };
         {
             name = S("Passenger Area 1");
             attach_offset = V(3, 2, 39);
-            view_offset = V(0, 0, 0);
+            view_offset = V(1, 0, 2);
             group = "passenger_area_1";
         };
     };
@@ -125,6 +125,10 @@ if visual_line_number_displays and visual_line_number_displays.setup_advtrains_w
                 };
             };
         }, 1);
+end
+
+if advtrains_attachment_offset_patch and advtrains_attachment_offset_patch.setup_advtrains_wagon then
+    advtrains_attachment_offset_patch.setup_advtrains_wagon(konstal_105_definition);
 end
 
 local item_name = "minitram_konstal_105:minitram_konstal_105_normal"
