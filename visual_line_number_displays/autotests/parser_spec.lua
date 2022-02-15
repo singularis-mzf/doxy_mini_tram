@@ -206,9 +206,18 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                 };
             }, ptbs("[A][B]"));
+        assert.same({
+                {
+                    text = "abc";
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                };
+            }, ptbs("abc[ABC]"));
     end);
 
-    it("assigns background patterns preverably to the left block", function()
+    it("assigns background patterns preferably to the left block", function()
         assert.same({
                 {
                     text = "A";
@@ -231,12 +240,27 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                 };
             }, ptbs("[A]/[B]"));
-    end);
-
-    it("distinguishes texts and background patterns", function()
         assert.same({
                 {
-                    text = "A/";
+                    text = "abc";
+                    features = {
+                        stroke_foreground = true;
+                    };
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                };
+            }, ptbs("abc|[ABC]"));
+    end);
+
+    it("distributes features and background patterns", function()
+        assert.same({
+                {
+                    text = "A";
+                    features = {
+                        stroke_13_foreground = true;
+                    };
                 };
                 {
                     text = "B";
@@ -247,6 +271,20 @@ describe("parse_text_block_string()", function()
         assert.same({
                 {
                     text = "A";
+                    features = {
+                        stroke_13_foreground = true;
+                        stroke_foreground = true;
+                    };
+                };
+                {
+                    text = "B";
+                    background_shape = "square";
+                    background_pattern = "diag_3";
+                };
+            }, ptbs("A/ | \\[B]"));
+        assert.same({
+                {
+                    text = "A";
                     background_shape = "square";
                     background_pattern = "lower";
                 };
@@ -254,6 +292,18 @@ describe("parse_text_block_string()", function()
                     text = "-";
                 };
             }, ptbs("[A]- -"));
+        assert.same({
+                {
+                    text = "A";
+                    background_shape = "square";
+                    background_pattern = "lower";
+                };
+                {
+                    text = "B";
+                    background_shape = "square";
+                    background_pattern = "left";
+                };
+            }, ptbs("[A]- |[B]"));
     end);
 
     it("uses only the first background shape", function()
@@ -354,6 +404,59 @@ describe("parse_text_block_string()", function()
                     };
                 };
             }, ptbs("[{|}A|]"));
+    end);
+
+    it("strips shapeless blocks adjacent to shaped blocks", function()
+        assert.same({
+                {
+                    text = "abc";
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                };
+                {
+                    text = "def";
+                };
+            }, ptbs("abc [ABC] def"));
+        assert.same({
+                {
+                    text = "abc";
+                    features = {
+                        stroke_13_foreground = true;
+                    };
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                    background_pattern = "diag_4";
+                };
+                {
+                    text = "def";
+                    features = {
+                        stroke_background = true;
+                    };
+                };
+            }, ptbs("abc/ /[ABC] |def"));
+        assert.same({
+                {
+                    text = "abc";
+                    features = {
+                        stroke_13_foreground = true;
+                        stroke_foreground = true;
+                    };
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                };
+                {
+                    text = "def";
+                    features = {
+                        stroke_background = true;
+                    };
+                };
+            }, ptbs("abc / | [ABC] | def"));
     end);
 
     it("parses empty blocks, assigning features to background", function()

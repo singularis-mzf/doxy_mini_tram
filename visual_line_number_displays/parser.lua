@@ -51,6 +51,28 @@ local function utf_8_characters(input)
     return iterator;
 end
 
+local whitespace_characters = {
+    [" "] = true;
+    ["\n"] = true;
+};
+
+--! @returns text before last space, text after last space or nil.
+local function split_at_last_space(text)
+    local last_space = nil;
+
+    for position, character in utf_8_characters(text) do
+        if whitespace_characters[character] then
+            last_space = position;
+        end
+    end
+
+    if last_space and (last_space < #text) then
+        return string.sub(text, 1, last_space - 1), string.sub(text, last_space + 1);
+    else
+        return text;
+    end
+end
+
 --! Parses a text block string, returns a list of text block descriptions.
 --!
 --! Does not parse brace sequences.
@@ -116,7 +138,7 @@ function visual_line_number_displays.parse_text_block_string(input)
         for _, character in utf_8_characters(text_after) do
             local feature = foreground_features[character];
 
-            -- text_after may possibly contain whitespace.
+            -- text_after may contain whitespace, so check this value.
             if feature then
                 current_block.features[feature] = true;
             end
@@ -165,11 +187,6 @@ function visual_line_number_displays.parse_text_block_string(input)
         current_block = empty_text_block();
         background_block_open = false;
     end
-
-    local whitespace_characters = {
-        [" "] = true;
-        ["\n"] = true;
-    };
 
     local background_patterns_before = {
         ["|"] = "left";
@@ -284,29 +301,31 @@ function visual_line_number_displays.parse_text_block_string(input)
             return false;
         end
 
-        if #current_block.text > 0 then
-            -- The previous (shapeless) block has text,
-            -- so features on that block should stay on that block.
-            -- This includes cases like “ [A]”, “/ [A]”, or “abc/[A]”.
-
-            if whitespace_characters[string.sub(current_block.text, -1)] then
-                -- If the previous block ends in a space,
-                -- its text_after is actually a background pattern for this block.
-                -- Example: “abc /[A]”
-                local background_pattern = text_after;
-                text_after = "";
+        if #text_after > 0 then
+            local a, b = split_at_last_space(text_after);
+            if b then
+                -- If the current text_after contains spaces,
+                -- the part after the last space is a pattern for this block.
+                -- Examples: “abc /[A]”, “abc/ |[A]”
+                text_after = a;
 
                 finish_block();
 
-                for _, c in utf_8_characters(background_pattern) do
+                for _, c in utf_8_characters(b) do
                     parse_pattern_or_feature(c);
                 end
 
                 -- parse_pattern_or_feature() has parsed patterns as features too.
                 current_block.features = {};
             else
+                -- Otherwise, the text_after belongs to the previous block anyway.
                 finish_block();
             end
+        elseif #current_block.text > 0 then
+            -- The previous (shapeless) block has text,
+            -- so features on that block should stay on that block.
+            -- This includes cases like “ [A]”, “/ [A]”, or “abc/[A]”.
+            finish_block();
         else
             -- Any previous characters were background patterns,
             -- which are already parsed, but are parsed as background feature too.
@@ -362,11 +381,19 @@ function visual_line_number_displays.parse_text_block_string(input)
                 current_block.text = current_block.text .. character;
             end
         else
-            -- text_after needs to be applied, since now it is known
-            -- that it is text content.
-            -- Example: “A/b”
-            current_block.text = current_block.text .. text_after .. character;
-            text_after = "";
+            if whitespace_characters[character] and (not background_block_open) then
+                -- Do not cause text_after to be considered text
+                -- if it is followed by whitespace.
+                -- Examples: “abc/ [A]”, “abc/ /[A]”
+                -- But not: “[abc/ ]”
+                text_after = text_after .. character;
+            else
+                -- text_after needs to be applied,
+                -- since now it is known that it is text content.
+                -- Examples: “A/b”, “abc/ d”
+                current_block.text = current_block.text .. text_after .. character;
+                text_after = "";
+            end
         end
     end
 
