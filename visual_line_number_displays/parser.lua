@@ -80,6 +80,7 @@ end
 --!
 --! The table can contain the elements @c features, @c background_shape,
 --! and @c background_pattern, and some elements to describe colors.
+--! The table may contain @c required_size and @c text_size.
 --!
 --! @c features is a table with these properties, which may be set true:
 --! \li @c stroke_background A red horizontal line centered under the text.
@@ -117,6 +118,12 @@ end
 --! \li @c background_color if @c background_shape is set.
 --! \li @c secondary_background_color if @c background_pattern is set. Default: white.
 --! \li @c feature_color Default: red.
+--!
+--! @c required_size may be a table with @c width and @c height,
+--! which shall be set so the block can be rendered in a box of this size.
+--!
+--! @c text_size may be a table with @c width and @c height,
+--! which shall be set to the size where text glyphs will be rendered.
 
 --! Parses a text block string, returns a list of text block descriptions.
 --!
