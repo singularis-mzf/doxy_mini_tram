@@ -24,6 +24,7 @@ describe("string.trim()", function()
 end);
 
 require("parser");
+require("basic_entities");
 
 describe("parse_text_block_string()", function()
     -- Calls parse_text_block_string(), but removes empty tables like features.
@@ -252,6 +253,16 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                 };
             }, ptbs("abc|[ABC]"));
+        assert.same({
+                {
+                    text = "ABC";
+                    background_shape = "square";
+                    background_pattern = "right";
+                };
+                {
+                    text = "abc";
+                };
+            }, ptbs("[ABC]|abc"));
     end);
 
     it("distributes features and background patterns", function()
@@ -489,5 +500,50 @@ describe("parse_text_block_string()", function()
                     stroke_13_background = true;
                 };
             }}, ptbs("/"));
+    end);
+end);
+
+describe("parse_entities_in_blocks()", function()
+    local function peb(blocks)
+        visual_line_number_displays.parse_entities_in_blocks(blocks);
+        return blocks;
+    end
+
+    local function t(text)
+        return {
+            text = text;
+            features = {};
+        };
+    end
+
+    it("Replaces basic entities", function()
+        assert.same({t("[")}, peb({t("{lbrak}")}));
+        assert.same({t("{{")}, peb({t("{lcurl}{lcurl}")}));
+        assert.same({t("<>")}, peb({t("{lt}{gt}")}));
+        assert.same({t("\n ")}, peb({t("{nl}{sp}")}));
+        assert.same({t("\n ")}, peb({t("{newline}{space}")}));
+    end);
+
+    it("Preserves text", function()
+        assert.same({t("")}, peb({t("")}));
+        assert.same({t("lbrak}")}, peb({t("lbrak}")}));
+        assert.same({t("lcurl}{")}, peb({t("lcurl}{lcurl}")}));
+        assert.same({t("{lcurl}")}, peb({t("{lcurl}lcurl}")}));
+        assert.same({t("lt>")}, peb({t("lt{gt}")}));
+        assert.same({t("lt}>")}, peb({t("lt}{gt}")}));
+        assert.same({t("ltgt")}, peb({t("ltgt")}));
+        assert.same({t("lt}gt")}, peb({t("lt}gt")}));
+        assert.same({t("<gt")}, peb({t("{lt}gt")}));
+    end);
+
+    it("Preserves invalid entities", function()
+        assert.same({t("{")}, peb({t("{")}));
+        assert.same({t("{{")}, peb({t("{lcurl}{")}));
+        assert.same({t("{{lcurl}}")}, peb({t("{{lcurl}}")}));
+        assert.same({t("{}")}, peb({t("{lcurl}}")}));
+        assert.same({t("{lcurl")}, peb({t("{lcurl")}));
+        assert.same({t("}(")}, peb({t("}{lpar}")}));
+        assert.same({t("<{gt")}, peb({t("{lt}{gt")}));
+        assert.same({t("{invalidentity}")}, peb({t("{invalidentity}")}));
     end);
 end);

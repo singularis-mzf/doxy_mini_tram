@@ -73,9 +73,56 @@ local function split_at_last_space(text)
     end
 end
 
+--! @class text_block_description
+--! A text_block_description table describes style and text of one text block.
+--!
+--! The table must contain the element @c text, which is a string.
+--!
+--! The table can contain the elements @c features, @c background_shape,
+--! and @c background_pattern, and some elements to describe colors.
+--!
+--! @c features is a table with these properties, which may be set true:
+--! \li @c stroke_background A red horizontal line centered under the text.
+--! \li @c stroke_foreground Centered over the text (strikethrough).
+--! \li @c stroke_13_background Line from bottom left to top right.
+--! \li @c stroke_13_foreground
+--! \li @c stroke_24_background Line from top left to bottom right.
+--! \li @c stroke_24_foreground
+--!
+--! @c background_shape can be one of these strings:
+--! @c square, @c round, @c diamond.
+--!
+--! @c background_pattern can be set to one of these strings,
+--! if @c background_shape is set:
+--! \li @c left Only left half of the background is colored in the background color.
+--! \li @c right
+--! \li @c upper
+--! \li @c lower
+--! \li @c plus_1 Only bottom-left and top-right quarters are colored.
+--! \li @c plus_4 Only top-left and bottom-right quarters are colored.
+--! \li @c diag_1 Only top-right half is colored, with 45° border through the center.
+--! \li @c diag_2 Only bottom-right half is colored.
+--! \li @c diag_3 Only bottom-left half is colored.
+--! \li @c diag_4 Only top-left half is colored.
+--! \li @c x_left Only left and right quarters are colored, with two 45º borders.
+--! \li @c x_upper Only upper and lower quarters are colored.
+--!
+--! With @c background_pattern, the uncolored parts are colored in a secondary
+--! background color, usually white.
+--!
+--! The digits 1, 2, 3, 4 describe quarters as in BSicon names.
+--!
+--! The table may contain these elements, which are color strings each:
+--! \li @c text_color Default: black or white, depending on background colors.
+--! \li @c background_color if @c background_shape is set.
+--! \li @c secondary_background_color if @c background_pattern is set. Default: white.
+--! \li @c feature_color Default: red.
+
 --! Parses a text block string, returns a list of text block descriptions.
 --!
---! Does not parse brace sequences.
+--! Braces are not handled specially, they are passed through.
+--!
+--! @returns List of text_block_description.
 function visual_line_number_displays.parse_text_block_string(input)
     -- This parser parses somewhat complex syntax.
     -- Since invalid syntax shall be passed through without errors,
@@ -397,9 +444,7 @@ function visual_line_number_displays.parse_text_block_string(input)
         end
     end
 
-    -- Parses a character.
-    -- The purpose of this function is to return after parsing the character.
-    local function parse_character(character)
+    for _, character in utf_8_characters(input) do
         if parse_background_block_start(character) then
         elseif parse_background_block_end(character) then
         elseif parse_pattern_or_feature(character) then
@@ -408,11 +453,48 @@ function visual_line_number_displays.parse_text_block_string(input)
         end
     end
 
-    for _, character in utf_8_characters(input) do
-        parse_character(character);
-    end
-
     finish_block();
 
     return result;
+end
+
+--! Returns the string value of the entity @p entity (without braces) or nil.
+function visual_line_number_displays.entity_value(entity)
+    return visual_line_number_displays.basic_entities[entity];
+end
+
+--! Parses entity brace sequences in @p blocks, modifying blocks in-place.
+--! @p blocks is a list of text_block_description tables.
+function visual_line_number_displays.parse_entities_in_blocks(blocks)
+    -- UTF-8 parsing is not necessary here,
+    -- because everything relevant is only 7 bit.
+
+    for _, block in ipairs(blocks) do
+        local pos = 1;
+        local text = block.text
+
+        while pos < #text do
+            pos = string.find(text, "{", pos, --[[ plain ]] true);
+            if not pos then
+                break;
+            end
+
+            local closing = string.find(text, "}", pos + 1, --[[ plain ]] true);
+            if not closing then
+                break;
+            end
+
+            local entity = string.sub(text, pos + 1, closing - 1);
+            local value = visual_line_number_displays.entity_value(entity);
+
+            if value then
+                text = string.sub(text, 1, pos - 1) .. value .. string.sub(text, closing + 1);
+                pos = pos + #value;
+            else
+                pos = closing + 1;
+            end
+        end
+
+        block.text = text;
+    end
 end
