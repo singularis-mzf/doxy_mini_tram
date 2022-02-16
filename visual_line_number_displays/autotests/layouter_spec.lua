@@ -105,3 +105,52 @@ describe("calculate_block_size", function()
         assert.same(wh(59, 16), cbs(t("123 456", "diamond")).required_size);
     end);
 end);
+
+describe("blocks_layout", function()
+    local bl = visual_line_number_displays.blocks_layout;
+
+    describe("set_max_height()", function()
+        it("scales all too high blocks down", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 1, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 1, height = 20 };
+                };
+                {
+                    text = "C";
+                    required_size = { width = 1, height = 21 };
+                };
+            };
+
+            local row = bl:new(blocks);
+            row:set_max_height(10);
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 1, height = 1 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 0.5;
+                    size = { width = 1, height = 10 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 0.375;
+                    size = { width = 1, height = 8 };
+                };
+            };
+
+            assert.same(reference, row);
+        end);
+    end);
+end);
