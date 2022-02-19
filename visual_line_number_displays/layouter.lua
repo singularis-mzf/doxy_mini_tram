@@ -70,16 +70,8 @@ function visual_line_number_displays.calculate_blocks_sizes(blocks)
     end
 end
 
---! @class display_layout
---! A display_layout table describes placement and scale of text blocks
---! on a display.
---!
---! It contains the element @c number_section,
---! and optionally @c text_section and @c details_section.
---! These elements are blocks_layout tables.
-
 --! @class blocks_layout
---! A blocks_layout table describes placement and scale of one row of text blocks.
+--! A blocks_layout object describes placement and scale of one row of text blocks.
 --!
 --! It is a list of tables with these elements:
 --! \li @c block The original text_block_description table. (Read-only)
@@ -135,15 +127,25 @@ function visual_line_number_displays.blocks_layout:height()
     return h;
 end
 
---! Returns the scale of the most scaled down block in this layout.
-function visual_line_number_displays.blocks_layout:min_scale()
+--! Returns the scale of the least scaled down block in this layout.
+function visual_line_number_displays.blocks_layout:max_scale()
     local s = nil;
 
     for _, block in ipairs(self) do
-        s = math.min(s, block.scale);
+        s = math.max(s or 0, block.scale);
     end
 
     return s;
+end
+
+--! Scales all larger blocks down to @p scale.
+function visual_line_number_displays.blocks_layout:set_max_scale(scale)
+    for i, block in ipairs(self) do
+        if block.scale > scale then
+            -- Avoid rounding errors in ld() using factor 0.9.
+            self:scale_block(i, (scale / block.scale) * 0.9);
+        end
+    end
 end
 
 --! Scales all blocks down so much that they fit in @p height.
@@ -166,26 +168,28 @@ function visual_line_number_displays.blocks_layout:can_be_shortened()
     return false;
 end
 
---! Scales the block with largest scale (or width) one step down.
-function visual_line_number_displays.blocks_layout:shorten()
+--! Scales the block with largest scale (or dimension) one step down.
+--!
+--! @param what Can be the string @c width or @c height, optional.
+function visual_line_number_displays.blocks_layout:shrink(what)
     local max_scale = 0;
-    local max_width = 0;
+    local max_size = 0;
 
     local block_to_scale = nil;
 
     for i, block in ipairs(self) do
         if block.scale > max_scale then
             block_to_scale = i;
-        elseif block.scale == max_scale and block.size.width > max_width then
+        elseif what and block.scale == max_scale and block.size[what] > max_size then
             block_to_scale = i;
         end
 
         max_scale = math.max(max_scale, block.scale);
-        max_width = math.max(max_width, block.size.width);
+        max_size = math.max(max_size, block.size[what]);
     end
 
     if not block_to_scale then
-        return false;
+        return;
     end
 
     -- Scales down one scaling step.
@@ -243,4 +247,104 @@ function visual_line_number_displays.blocks_layout:stretch_height(max_height)
             block.size.height = math.min(max_height, math.max(block.size.width, block.size.height));
         end
     end
+end
+
+--! @class display_layout
+--! A display_layout object describes placement and scale of text blocks
+--! on a display.
+--!
+--! It contains three blocks_layout tables called
+--! @c number_section, @c text_section and @c details_section.
+--! These blocks_layout tables may be empty.
+visual_line_number_displays.display_layout = {};
+
+--! Creates a display_layout object from text_block_description table lists.
+--!
+--! @param number Goes on the left side of the display.
+--! @param text Goes on the right side of the display. (Optional)
+--! @param details Goes below @p text, with smaller font. (Optional)
+function visual_line_number_displays.display_layout:new(number, text, details)
+    local d = {
+        number_section = visual_line_number_displays.blocks_layout:new(number);
+        text_section = visual_line_number_displays.blocks_layout:new(text or {});
+        details_section = visual_line_number_displays.blocks_layout:new(details or {});
+    };
+
+    -- Details section is a bit smaller.
+    d.details_section:set_max_scale(0.75);
+
+    setmetatable(d, { __index = self });
+
+    return d;
+end
+
+--! Returns the current width of the layout at the current blocks’ scales.
+function visual_line_number_displays.display_layout:width()
+    return self.number_section:width() + math.max(self.text_section:width(), self.details_section:width());
+end
+
+--! Returns the current height of the layout at the current blocks’ scales.
+function visual_line_number_displays.display_layout:height()
+    return math.max(self.number_section:height(), self.text_section:height() + self.details_section:height());
+end
+
+--! Resizes and arranges blocks so they fit in @p size.
+--!
+--! @param size Maximum size, table with elements @p width and @p height.
+function visual_line_number_displays.display_layout:calculate_layout(size)
+    -- First approximation: maximum height.
+    self.number_section:set_max_height(size.height);
+    self.text_section:set_max_height(size.height);
+    self.details_section:set_max_height(size.height);
+
+    -- Shrink to fit.
+    while (self.text_section:height() + self.details_section:height()) > size.height do
+        local ts = self.text_section:max_scale();
+        local ds = self.details_section:max_scale();
+
+        if ts > ds * 1.5 then
+            self.text_section:shrink("height");
+        else
+            self.details_section:shrink("height");
+        end
+    end
+
+    while self:width() > size.width do
+        local ns = self.number_section:max_scale();
+        local ts = self.text_section:max_scale();
+        local ds = self.details_section:max_scale();
+
+        if ns > (math.max(ts, ds)) then
+            self.number_section:shrink("width");
+        elseif ts > ds * 1.5 then
+            self.text_section:shrink("width");
+        else
+            self.details_section:shrink("width");
+        end
+    end
+
+    -- Height stretch for shaped blocks.
+    self.number_section:stretch_height(size.height);
+    -- Stretch text before details.
+    -- Text is less likely to contain shaped blocks,
+    -- but if it does, these make better use of stretching.
+    self.text_section:stretch_height(size.height - self.details_section:height());
+    self.details_section:stretch_height(size.height - self.text_section:height());
+
+    -- Position.
+    local width = self:width();
+    local number_width = self.number_section:width();
+
+    self.number_section:align({ x = number_width * 0.5, y = size.height * 0.5 });
+
+    local text_x_center = (width + number_width) * 0.5;
+
+    local th = self.text_section:height()
+    local dh = self.details_section:height();
+    local text_details_y_between = (size.height * 0.5) + (th - dh) * 0.5;
+    local text_y_center = text_details_y_between - (th * 0.5);
+    local details_y_center = text_details_y_between + (dh * 0.5);
+
+    self.text_section:align({ x = text_x_center, y = text_y_center });
+    self.details_section:align({ x = text_x_center, y = details_y_center });
 end

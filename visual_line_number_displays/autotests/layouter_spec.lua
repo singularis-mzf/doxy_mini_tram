@@ -153,12 +153,12 @@ describe("blocks_layout", function()
         end);
     end);
 
-    describe("shorten()", function()
+    describe("shrink()", function()
         it("shortens the longest block", function()
             local blocks = {
                 {
                     text = "A";
-                    required_size = { width = 1, height = 1 };
+                    required_size = { width = 1, height = 10 };
                 };
                 {
                     text = "B";
@@ -171,20 +171,62 @@ describe("blocks_layout", function()
             };
             local row = bl:new(blocks);
 
-            row:shorten();
+            row:shrink("width");
 
             local reference = {
                 {
                     block = blocks[1];
                     position = { x = 0, y = 0 };
                     scale = 1;
-                    size = { width = 1, height = 1 };
+                    size = { width = 1, height = 10 };
                 };
                 {
                     block = blocks[2];
                     position = { x = 0, y = 0 };
                     scale = 0.75;
                     size = { width = 8, height = 1 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 1, height = 1 };
+                };
+            };
+            assert.same(reference, row);
+        end);
+
+        it("flattens the highest block", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 10, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 1, height = 10 };
+                };
+                {
+                    text = "C";
+                    required_size = { width = 1, height = 1 };
+                };
+            };
+            local row = bl:new(blocks);
+
+            row:shrink("height");
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 10, height = 1 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 0.75;
+                    size = { width = 1, height = 8 };
                 };
                 {
                     block = blocks[3];
@@ -220,7 +262,7 @@ describe("blocks_layout", function()
             row:scale_block(1, 0.4)
             row:scale_block(2, 0.5)
             row:scale_block(4, 0.5)
-            row:shorten();
+            row:shrink("width");
             local reference = {
                 {
                     block = blocks[1];
@@ -270,13 +312,13 @@ describe("blocks_layout", function()
             local row = bl:new(blocks);
 
             assert.same(true, row:can_be_shortened());
-            row:shorten();
+            row:shrink("width");
             assert.same(true, row:can_be_shortened());
-            row:shorten();
+            row:shrink("width");
             assert.same(true, row:can_be_shortened());
-            row:shorten();
+            row:shrink("width");
             assert.same(true, row:can_be_shortened());
-            row:shorten();
+            row:shrink("width");
             assert.same(false, row:can_be_shortened());
 
             local reference = {
@@ -438,5 +480,171 @@ describe("blocks_layout", function()
             };
             assert.same(reference, row);
         end);
+    end);
+end);
+
+describe("display_layout", function()
+    local dl = visual_line_number_displays.display_layout;
+    it("calculates a very simple layout", function()
+        local number_blocks = {{
+            text = "A";
+            required_size = { width = 15, height = 5 };
+        }};
+
+        local display = dl:new(number_blocks);
+
+        display:calculate_layout({ width = 40, height = 20 });
+
+        local reference = {
+            number_section = {{
+                block = number_blocks[1];
+                position = { x = 0, y = 7 };
+                scale = 1;
+                size = { width = 15, height = 5 };
+            }};
+            text_section = {};
+            details_section = {};
+        };
+
+        assert.same(reference, display);
+    end);
+
+    it("calculates a less simple layout", function()
+        local number_blocks = {{
+            text = "A";
+            background_shape = "square";
+            required_size = { width = 15, height = 5 };
+        }};
+        local text_blocks = {{
+            text = "B";
+            required_size = { width = 35, height = 15 };
+        }};
+        local details_blocks = {{
+            text = "C";
+            required_size = { width = 25, height = 7 };
+        }};
+
+        local display = dl:new(number_blocks, text_blocks, details_blocks);
+
+        display:calculate_layout({ width = 40, height = 20 });
+
+        local reference = {
+            number_section = {{
+                block = number_blocks[1];
+                position = { x = 0, y = 4 };
+                scale = 0.75;
+                size = { width = 12, height = 12 };
+            }};
+            text_section = {{
+                block = text_blocks[1];
+                position = { x = 12, y = 2 };
+                scale = 0.75;
+                size = { width = 27, height = 12 };
+            }};
+            details_section = {{
+                block = details_blocks[1];
+                position = { x = 19, y = 14 };
+                scale = 0.5;
+                size = { width = 13, height = 4 };
+            }};
+        };
+
+        assert.same(reference, display);
+    end);
+
+    it("calculates a complex layout", function()
+        local number_blocks = {{
+            text = "RE11";
+            background_shape = "diamond";
+            required_size = { width = 35, height = 16 };
+        }};
+        local text_blocks = {
+            {
+                text = "Köln HBF";
+                required_size = { width = 40, height = 8 };
+            };
+            {
+                text = "U";
+                background_shape = "square";
+                required_size = { width = 9, height = 12 };
+            };
+            {
+                text = "S";
+                background_shape = "round";
+                required_size = { width = 10, height = 10 };
+            };
+        };
+        local details_blocks = {
+            {
+                text = "über:";
+                required_size = { width = 25, height = 8 };
+            };
+            {
+                text = "S";
+                background_shape = "round";
+                required_size = { width = 10, height = 10 };
+            };
+            {
+                text = "Chorweiler";
+                required_size = { width = 50, height = 8 };
+            };
+        };
+
+        local display = dl:new(number_blocks, text_blocks, details_blocks);
+
+        display:calculate_layout({ width = 120, height = 40 });
+
+        local reference = {
+            number_section = {
+                {
+                    block = number_blocks[1];
+                    position = { x = 0, y = 2 };
+                    scale = 1;
+                    size = { width = 35, height = 35 };
+                };
+            };
+            text_section = {
+                {
+                    block = text_blocks[1];
+                    position = { x = 35, y = 13 };
+                    scale = 1;
+                    size = { width = 40, height = 8 };
+                };
+                {
+                    block = text_blocks[2];
+                    position = { x = 77, y = 11 };
+                    scale = 1;
+                    size = { width = 9, height = 12 };
+                };
+                {
+                    block = text_blocks[3];
+                    position = { x = 88, y = 12 };
+                    scale = 1;
+                    size = { width = 10, height = 10 };
+                };
+            };
+            details_section = {
+                {
+                    block = details_blocks[1];
+                    position = { x = 43, y = 23 };
+                    scale = 0.5;
+                    size = { width = 13, height = 4 };
+                };
+                {
+                    block = details_blocks[2];
+                    position = { x = 58, y = 23 };
+                    scale = 0.5;
+                    size = { width = 5, height = 5 };
+                };
+                {
+                    block = details_blocks[3];
+                    position = { x = 65, y = 23 };
+                    scale = 0.5;
+                    size = { width = 25, height = 4 };
+                };
+            };
+        };
+
+        assert.same(reference, display);
     end);
 end);
