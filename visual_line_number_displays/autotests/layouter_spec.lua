@@ -125,8 +125,8 @@ describe("blocks_layout", function()
                     required_size = { width = 1, height = 21 };
                 };
             };
-
             local row = bl:new(blocks);
+
             row:set_max_height(10);
 
             local reference = {
@@ -149,7 +149,293 @@ describe("blocks_layout", function()
                     size = { width = 1, height = 8 };
                 };
             };
+            assert.same(reference, row);
+        end);
+    end);
 
+    describe("shorten()", function()
+        it("shortens the longest block", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 1, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 10, height = 1 };
+                };
+                {
+                    text = "C";
+                    required_size = { width = 1, height = 1 };
+                };
+            };
+            local row = bl:new(blocks);
+
+            row:shorten();
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 1, height = 1 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 0.75;
+                    size = { width = 8, height = 1 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 1, height = 1 };
+                };
+            };
+            assert.same(reference, row);
+        end);
+
+        it("shortens the block with highest scale, even if others are longer", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 100, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 10, height = 1 };
+                };
+                {
+                    text = "C";
+                    required_size = { width = 10, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 100, height = 1 };
+                };
+            };
+            local row = bl:new(blocks);
+
+            row:scale_block(1, 0.4)
+            row:scale_block(2, 0.5)
+            row:scale_block(4, 0.5)
+            row:shorten();
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 0.375;
+                    size = { width = 38, height = 1 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 0.5;
+                    size = { width = 5, height = 1 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 0.75;
+                    size = { width = 8, height = 1 };
+                };
+                {
+                    block = blocks[4];
+                    position = { x = 0, y = 0 };
+                    scale = 0.5;
+                    size = { width = 50, height = 1 };
+                };
+            };
+            assert.same(reference, row);
+        end);
+    end);
+
+    describe("can_be_shortened()", function()
+        it("stops shortening", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 1, height = 1 };
+                };
+                {
+                    text = "B";
+                    required_size = { width = 1, height = 1 };
+                };
+                {
+                    text = "C";
+                    required_size = { width = 2, height = 1 };
+                };
+            };
+            local row = bl:new(blocks);
+
+            assert.same(true, row:can_be_shortened());
+            row:shorten();
+            assert.same(true, row:can_be_shortened());
+            row:shorten();
+            assert.same(true, row:can_be_shortened());
+            row:shorten();
+            assert.same(true, row:can_be_shortened());
+            row:shorten();
+            assert.same(false, row:can_be_shortened());
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 0.75;
+                    size = { width = 1, height = 1 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 0.75;
+                    size = { width = 1, height = 1 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 0.5;
+                    size = { width = 1, height = 1 };
+                };
+            };
+            assert.same(reference, row);
+        end);
+    end);
+
+    describe("stretch_height()", function()
+        it("stretches up to square shape", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 15, height = 5 };
+                };
+                {
+                    text = "B";
+                    background_shape = "square";
+                    required_size = { width = 15, height = 5 };
+                };
+                {
+                    text = "C";
+                    background_shape = "square";
+                    required_size = { width = 5, height = 8 };
+                };
+                {
+                    text = "D";
+                    background_shape = "square";
+                    required_size = { width = 8, height = 9 };
+                };
+                {
+                    text = "E";
+                    background_shape = "square";
+                    required_size = { width = 8, height = 5 };
+                };
+            };
+            local row = bl:new(blocks);
+
+            row:stretch_height(10);
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 15, height = 5 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 15, height = 10 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 5, height = 8 };
+                };
+                {
+                    block = blocks[4];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 8, height = 9 };
+                };
+                {
+                    block = blocks[5];
+                    position = { x = 0, y = 0 };
+                    scale = 1;
+                    size = { width = 8, height = 8 };
+                };
+            };
+            assert.same(reference, row);
+        end);
+    end);
+
+    describe("align()", function()
+        it("Centers blocks at some point", function()
+            local blocks = {
+                {
+                    text = "A";
+                    required_size = { width = 15, height = 5 };
+                };
+                {
+                    text = "B";
+                    background_shape = "square";
+                    required_size = { width = 15, height = 5 };
+                };
+                {
+                    text = "C";
+                    background_shape = "round";
+                    required_size = { width = 5, height = 8 };
+                };
+                {
+                    text = "D";
+                    background_shape = "diamond";
+                    required_size = { width = 8, height = 9 };
+                };
+                {
+                    text = "E";
+                    required_size = { width = 80, height = 2 };
+                };
+            };
+            local row = bl:new(blocks);
+            row:scale_block(1, 0.5);
+            row:scale_block(3, 2);
+
+            row:align({ x = 60, y = 9 });
+
+            local reference = {
+                {
+                    block = blocks[1];
+                    position = { x = -5, y = 7 };
+                    scale = 0.5;
+                    size = { width = 8, height = 3 };
+                };
+                {
+                    block = blocks[2];
+                    position = { x = 5, y = 6 };
+                    scale = 1;
+                    size = { width = 15, height = 5 };
+                };
+                {
+                    block = blocks[3];
+                    position = { x = 22, y = 1 };
+                    scale = 2;
+                    size = { width = 10, height = 16 };
+                };
+                {
+                    block = blocks[4];
+                    position = { x = 34, y = 4 };
+                    scale = 1;
+                    size = { width = 8, height = 9 };
+                };
+                {
+                    block = blocks[5];
+                    position = { x = 44, y = 8 };
+                    scale = 1;
+                    size = { width = 80, height = 2 };
+                };
+            };
             assert.same(reference, row);
         end);
     end);

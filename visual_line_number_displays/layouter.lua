@@ -176,7 +176,7 @@ function visual_line_number_displays.blocks_layout:shorten()
     for i, block in ipairs(self) do
         if block.scale > max_scale then
             block_to_scale = i;
-        elseif block.size.width > max_width then
+        elseif block.scale == max_scale and block.size.width > max_width then
             block_to_scale = i;
         end
 
