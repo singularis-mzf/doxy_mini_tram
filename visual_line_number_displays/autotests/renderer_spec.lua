@@ -95,6 +95,21 @@ describe("render_text_block", function()
         assert.same(":2,5={[combine:5x8:0,0=A.png}", rtb(block, 1));
     end);
 
+    it("renders deplaced scaled text blocks in superresolution", function()
+        local block = {
+            block = {
+                text = "A";
+                required_size = { width = 9, height = 16 };
+                text_size = { width = 5, height = 8 };
+            };
+            scale = 0.375;
+            position = { x = 15, y = 4 };
+            size = { width = 9, height = 16 };
+        };
+
+        assert.same(":31,11={[combine:5x8:0,0=A.png^[resize:4x6}", rtb(block, 2));
+    end);
+
     it("renders colored text blocks", function()
         local block = {
             block = {

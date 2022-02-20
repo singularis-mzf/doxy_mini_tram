@@ -55,8 +55,8 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
         y = math.floor(layout_text_position.y * sr_scale);
     };
     local text_size = {
-        width = math.floor(layout_text_size.width * sr_scale);
-        height = math.floor(layout_text_size.height * sr_scale);
+        width = math.ceil(layout_text_size.width * sr_scale);
+        height = math.ceil(layout_text_size.height * sr_scale);
     };
 
     -- Render text.
