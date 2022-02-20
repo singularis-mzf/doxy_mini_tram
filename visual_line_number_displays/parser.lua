@@ -207,12 +207,9 @@ function visual_line_number_displays.parse_text_block_string(input)
         parse_text_after_as_foreground_features();
 
         if not current_block.background_shape then
-            -- Shapeless blocks are whitespace trimmed,
-            -- because there are no start and end delimiters.
-            -- Trimming needs to be done before checking for visual emptiness,
-            -- because whitespace may separate two shaped blocks like “[A]/ -[B]”,
-            -- but also shapeless blocks like “[A] |- [B]”.
-            current_block.text = string.trim(current_block.text);
+            -- Shapeless blocks are not whitespace trimmed,
+            -- because whitespace is immediately discarded at the beginning,
+            -- and discarded when parsing from text_after.
 
             -- Shapeless blocks do not need the background pattern.
             current_block.background_pattern = nil;
@@ -416,6 +413,33 @@ function visual_line_number_displays.parse_text_block_string(input)
         end
     end
 
+    local section_break_characters = {
+        ["\n"] = true;
+        [";"] = true;
+    };
+
+    -- Parses a section break character,
+    -- which may be newline or semicolon at the end of a block.
+    --
+    -- In that case, the current block is finished
+    -- and a block with only a semicolon is added.
+    --
+    -- Returns true if the character has been parsed.
+    local function parse_section_break(character)
+        if background_block_open then
+            return false;
+        end
+
+        if section_break_characters[character] then
+            finish_block();
+            current_block.text = ";";
+            finish_block();
+            return true;
+        end
+
+        return false;
+    end
+
     -- Parses a character as plain text.
     -- This is done if the character is an actual text character,
     -- or its special interpretation failed.
@@ -432,7 +456,7 @@ function visual_line_number_displays.parse_text_block_string(input)
             if (not background_block_open) and whitespace_characters[character] then
                 -- Do not start a shapeless block with whitespace.
             else
-                current_block.text = current_block.text .. character;
+                current_block.text = character;
             end
         else
             if whitespace_characters[character] and (not background_block_open) then
@@ -455,6 +479,7 @@ function visual_line_number_displays.parse_text_block_string(input)
         if parse_background_block_start(character) then
         elseif parse_background_block_end(character) then
         elseif parse_pattern_or_feature(character) then
+        elseif parse_section_break(character) then
         else
             parse_text_character(character);
         end

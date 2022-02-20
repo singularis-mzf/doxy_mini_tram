@@ -46,15 +46,54 @@ describe("parse_text_block_string()", function()
         assert.same({{ text = "Porta Westfalica" }}, ptbs("Porta Westfalica"));
     end);
 
-    it("preserves inner whitespace (and outer space in shaped blocks)", function()
+    it("preserves whitespace in shaped blocks", function()
         assert.same({{
                 text = " Whitespace\n kept ";
                 background_shape = "square";
             }}, ptbs("[ Whitespace\n kept ]"));
+    end);
+
+    it("removes outer space from shapeless blocks", function()
         assert.same({{
-                text = "Whitespace\n trimmed";
-            }}, ptbs(" Whitespace\n trimmed "));
+                text = "no outer space characters";
+            }}, ptbs("   no outer space characters   "));
+        assert.same({{
+                text = "no outer space characters inside features";
+                features = {
+                    stroke_13_background = true;
+                    stroke_foreground = true;
+                };
+            }}, ptbs("/   no outer space characters inside features   |"));
         assert.same({}, ptbs(" "));
+    end);
+
+    it("Converts section breaks from shapeless block input", function()
+        assert.same({{
+                text = ";";
+            }}, ptbs(" \n "));
+        assert.same({
+                {
+                    text = ";";
+                };
+                {
+                    text = "inner";
+                };
+                {
+                    text = ";";
+                };
+                {
+                    text = "and outer";
+                };
+                {
+                    text = ";";
+                };
+                {
+                    text = "newline";
+                };
+                {
+                    text = ";";
+                };
+            }, ptbs("\n inner\nand outer \n newline\n "));
     end);
 
     it("recognizes single features", function()
