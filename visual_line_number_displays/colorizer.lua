@@ -1,0 +1,3 @@
+-- SPDX-FileCopyrightText: 2022 David Hurka <doxydoxy@mailbox.org>
+--
+-- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later

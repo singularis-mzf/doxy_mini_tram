@@ -8,51 +8,12 @@ package.path = "visual_line_number_displays/?.lua;" .. package.path
 -- See https://rubenwardy.com/minetest_modding_book/en/quality/unit_testing.html
 _G.visual_line_number_displays = {};
 
--- Replacement for Minetest’s string:split().
-local function split(text, separator)
-    local text_lines = {};
-    local pos = 1;
-
-    while pos <= #text do
-        local found = string.find(text, separator, pos, --[[ plain ]] true);
-
-        if found then
-            table.insert(text_lines, string.sub(text, pos, found - 1));
-            pos = found + #separator;
-        else
-            table.insert(text_lines, string.sub(text, pos));
-            break;
-        end
-    end
-
-    -- Include empty match at end of last separator.
-    if pos > 1 and pos > #text then
-        table.insert(text_lines, "");
-    end
-
-    return text_lines;
-end
-
-string.split = split;
-
--- Replacement for Font:get_width().
-local function get_width(text)
-    return 5 * #text;
-end
-
--- Replacement for Font:get_height().
-local function get_height(line_count)
-    return 8 * line_count;
-end
-
-visual_line_number_displays.font = {
-    get_width = get_width;
-    get_height = get_height;
-};
-
 require("layouter");
 
-describe("calculate_block_size", function()
+require("render_mocks");
+require("string_mocks");
+
+describe("calculate_block_size()", function()
     local cbs = visual_line_number_displays.calculate_block_size;
 
     local function wh(w, h)
@@ -103,6 +64,26 @@ describe("calculate_block_size", function()
         assert.same(wh(13, 13), cbs(t("A", "diamond")).required_size);
         assert.same(wh(39, 12), cbs(t("123 456", "round")).required_size);
         assert.same(wh(59, 16), cbs(t("123 456", "diamond")).required_size);
+    end);
+
+    it("Operates on a list", function()
+        local blocks = {
+            t("", "square");
+            t("A", "square");
+        };
+
+        visual_line_number_displays.calculate_block_sizes(blocks);
+
+        local reference = {
+            t("", "square");
+            t("A", "square");
+        };
+        reference[1].required_size = wh(4, 4);
+        reference[1].text_size = wh(0, 0);
+        reference[2].required_size = wh(9, 12);
+        reference[2].text_size = wh(5, 8);
+
+        assert.same(reference, blocks);
     end);
 end);
 
@@ -493,7 +474,7 @@ describe("display_layout", function()
 
         local display = dl:new(number_blocks);
 
-        display:calculate_layout({ width = 40, height = 20 });
+        display:calculate_layout(40, 20);
 
         local reference = {
             number_section = {{
@@ -526,7 +507,7 @@ describe("display_layout", function()
 
         local display = dl:new(number_blocks, text_blocks, details_blocks);
 
-        display:calculate_layout({ width = 40, height = 20 });
+        display:calculate_layout(40, 20);
 
         local reference = {
             number_section = {{
@@ -592,7 +573,7 @@ describe("display_layout", function()
 
         local display = dl:new(number_blocks, text_blocks, details_blocks);
 
-        display:calculate_layout({ width = 120, height = 40 });
+        display:calculate_layout(120, 40);
 
         local reference = {
             number_section = {

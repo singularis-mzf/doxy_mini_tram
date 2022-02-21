@@ -62,7 +62,13 @@ function visual_line_number_displays.calculate_block_size(block)
     };
 end
 
-function visual_line_number_displays.calculate_blocks_sizes(blocks)
+--! Calculates the necessary bounding boxes for @p blocks at 1:1 scale.
+--!
+--! Includes multi-line text and background shapes.
+--! Modifies blocks in-place.
+--!
+--! @param blocks A list of text_block_description tables.
+function visual_line_number_displays.calculate_block_sizes(blocks)
     for _, block in ipairs(blocks) do
         local size = visual_line_number_displays.calculate_block_size(block);
         block.required_size = size.required_size;
@@ -125,6 +131,17 @@ function visual_line_number_displays.blocks_layout:height()
     end
 
     return h;
+end
+
+--! Returns the scale of the most scaled down block in this layout.
+function visual_line_number_displays.blocks_layout:min_scale()
+    local s = nil;
+
+    for _, block in ipairs(self) do
+        s = math.max(s or math.huge, block.scale);
+    end
+
+    return s;
 end
 
 --! Returns the scale of the least scaled down block in this layout.
@@ -288,17 +305,30 @@ function visual_line_number_displays.display_layout:height()
     return math.max(self.number_section:height(), self.text_section:height() + self.details_section:height());
 end
 
+--! Returns the inverse of the minimum block scale,
+--! increased to powers of two.
+--!
+--! Details section may be one scaling step smaller than 1.
+function visual_line_number_displays.display_layout:required_superresolution()
+    local min_scale = math.min(self.number_section:min_scale() or 1,
+                               self.text_section:min_scale() or 1,
+                               (self.details_section:min_scale() or 1) * 1.5);
+
+    return 2 ^ math.ceil(-ld(min_scale));
+end
+
 --! Resizes and arranges blocks so they fit in @p size.
 --!
---! @param size Maximum size, table with elements @p width and @p height.
-function visual_line_number_displays.display_layout:calculate_layout(size)
+--! @param max_width Maximum display width. Display is aligned left.
+--! @param height Fixed display height. Display is aligned vertically centered.
+function visual_line_number_displays.display_layout:calculate_layout(max_width, height)
     -- First approximation: maximum height.
-    self.number_section:set_max_height(size.height);
-    self.text_section:set_max_height(size.height);
-    self.details_section:set_max_height(size.height);
+    self.number_section:set_max_height(height);
+    self.text_section:set_max_height(height);
+    self.details_section:set_max_height(height);
 
     -- Shrink to fit.
-    while (self.text_section:height() + self.details_section:height()) > size.height do
+    while (self.text_section:height() + self.details_section:height()) > height do
         local ts = self.text_section:max_scale();
         local ds = self.details_section:max_scale();
 
@@ -309,7 +339,7 @@ function visual_line_number_displays.display_layout:calculate_layout(size)
         end
     end
 
-    while self:width() > size.width do
+    while self:width() > max_width do
         local ns = self.number_section:max_scale();
         local ts = self.text_section:max_scale();
         local ds = self.details_section:max_scale();
@@ -324,27 +354,42 @@ function visual_line_number_displays.display_layout:calculate_layout(size)
     end
 
     -- Height stretch for shaped blocks.
-    self.number_section:stretch_height(size.height);
+    self.number_section:stretch_height(height);
     -- Stretch text before details.
     -- Text is less likely to contain shaped blocks,
     -- but if it does, these make better use of stretching.
-    self.text_section:stretch_height(size.height - self.details_section:height());
-    self.details_section:stretch_height(size.height - self.text_section:height());
+    self.text_section:stretch_height(height - self.details_section:height());
+    self.details_section:stretch_height(height - self.text_section:height());
 
     -- Position.
     local width = self:width();
     local number_width = self.number_section:width();
 
-    self.number_section:align({ x = number_width * 0.5, y = size.height * 0.5 });
+    self.number_section:align({ x = number_width * 0.5, y = height * 0.5 });
 
     local text_x_center = (width + number_width) * 0.5;
 
     local th = self.text_section:height()
     local dh = self.details_section:height();
-    local text_details_y_between = (size.height * 0.5) + (th - dh) * 0.5;
+    local text_details_y_between = (height * 0.5) + (th - dh) * 0.5;
     local text_y_center = text_details_y_between - (th * 0.5);
     local details_y_center = text_details_y_between + (dh * 0.5);
 
     self.text_section:align({ x = text_x_center, y = text_y_center });
     self.details_section:align({ x = text_x_center, y = details_y_center });
+end
+
+--! Returns bottom_right corner of the whole layout as table with @c x and @c y.
+function visual_line_number_displays.display_layout:bottom_right()
+    local x_max = 0;
+    local y_max = 0;
+
+    for _, section in ipairs({ self.number_section, self.text_section, self.details_section }) do
+        for _, block in ipairs(section) do
+            x_max = math.max(x_max, block.position.x + block.size.width);
+            y_max = math.max(y_max, block.position.y + block.size.height);
+        end
+    end
+
+    return { x = x_max, y = y_max };
 end

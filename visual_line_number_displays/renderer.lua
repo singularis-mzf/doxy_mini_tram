@@ -11,7 +11,6 @@ function visual_line_number_displays.texture_escape(input)
     return string.gsub(input, "[:^]", "\\%1");
 end
 
-
 --! Makes a texture string depicting @p block.
 --!
 --! Result needs to be added to a @c combine modifier.
@@ -80,4 +79,34 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
     text_texture = string.format(":%i,%i=", text_position.x, text_position.y) .. text_texture;
 
     return text_texture;
+end
+
+--! Makes a texture string depicting @p layout.
+--!
+--! Result is a stand-alone texture string.
+--! @p layout starts with top-left at origin.
+--!
+--! @param layout A display_layout table.
+--! @param sr_scale superresolution scaling factor for this display.
+function visual_line_number_displays.render_layout(layout, sr_scale)
+    local bottom_right = layout:bottom_right();
+    local size = {
+        width = bottom_right.x * sr_scale;
+        height = bottom_right.y * sr_scale;
+    }
+
+    local texture_string = string.format("[combine:%ix%i", size.width, size.height);
+
+    local block_strings = {};
+    for _, section in ipairs({ layout.number_section, layout.text_section, layout.details_section }) do
+        for _, block in ipairs(section) do
+            table.insert(block_strings, visual_line_number_displays.render_text_block(block, sr_scale));
+        end
+    end
+
+    if not next(block_strings) then
+        return nil;
+    end
+
+    return texture_string .. table.concat(block_strings);
 end

@@ -495,6 +495,29 @@ function visual_line_number_displays.entity_value(entity)
     return visual_line_number_displays.basic_entities[entity];
 end
 
+--! Parses space sequences in @p blocks, modifying blocks in-place.
+--! @p blocks is a list of text_block_description tables.
+function visual_line_number_displays.parse_line_breaks_in_blocks(blocks)
+    -- UTF-8 parsing is not necessary here,
+    -- because everything relevant is only 7 bit.
+
+    for _, block in ipairs(blocks) do
+        local pos = 1;
+        local text = block.text
+
+        while pos < #text do
+            pos = string.find(text, "  ", pos, --[[ plain ]] true);
+            if not pos then
+                break;
+            end
+
+            text = string.sub(text, 1, pos - 1) .. "\n" .. string.sub(text, pos + 2);
+        end
+
+        block.text = text;
+    end
+end
+
 --! Parses entity brace sequences in @p blocks, modifying blocks in-place.
 --! @p blocks is a list of text_block_description tables.
 function visual_line_number_displays.parse_entities_in_blocks(blocks)
