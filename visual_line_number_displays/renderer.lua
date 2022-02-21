@@ -37,25 +37,25 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
     };
 
     -- Calculate text position and size in layout coordinates.
+    -- Rounding is done in layout coordinates,
+    -- i. e. superresolution does not lead to higher placement resolution.
     local layout_text_position = {
-        x = block.position.x + block_text_position.x * block.scale;
-        y = block.position.y + block_text_position.y * block.scale;
+        x = math.floor(block.position.x + block_text_position.x * block.scale);
+        y = math.floor(block.position.y + block_text_position.y * block.scale);
     };
     local layout_text_size = {
-        width = block.block.text_size.width * block.scale;
-        height = block.block.text_size.height * block.scale;
+        width = math.ceil(block.block.text_size.width * block.scale);
+        height = math.ceil(block.block.text_size.height * block.scale);
     };
 
     -- Calculate text position and size in superresolution coordinates.
-    -- Exactly here we need rounding,
-    -- because block scales are not integers and should line up in superresolution.
     local text_position = {
-        x = math.floor(layout_text_position.x * sr_scale);
-        y = math.floor(layout_text_position.y * sr_scale);
+        x = layout_text_position.x * sr_scale;
+        y = layout_text_position.y * sr_scale;
     };
     local text_size = {
-        width = math.ceil(layout_text_size.width * sr_scale);
-        height = math.ceil(layout_text_size.height * sr_scale);
+        width = layout_text_size.width * sr_scale;
+        height = layout_text_size.height * sr_scale;
     };
 
     -- Render text.

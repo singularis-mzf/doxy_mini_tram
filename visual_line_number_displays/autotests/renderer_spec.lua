@@ -89,7 +89,7 @@ describe("render_text_block()", function()
             size = { width = 9, height = 16 };
         };
 
-        assert.same(":31,11={[combine:5x8:0,0=A.png^[resize:4x6}", rtb(block, 2));
+        assert.same(":30,10={[combine:5x8:0,0=A.png^[resize:4x6}", rtb(block, 2));
     end);
 
     it("renders colored text blocks", function()
@@ -140,6 +140,6 @@ describe("render_layout()", function()
         layout.number_section = number_section;
         layout.details_section = details_section;
 
-        assert.same("[combine:48x40:31,11={[combine:5x8:0,0=A.png^[resize:4x6}:0,2={[combine:5x8:0,0=A.png^[colorize:#00ff00^[resize:10x16}", rl(layout, 2));
+        assert.same("[combine:48x40:30,10={[combine:5x8:0,0=A.png^[resize:4x6}:0,2={[combine:5x8:0,0=A.png^[colorize:#00ff00^[resize:10x16}", rl(layout, 2));
     end);
 end);

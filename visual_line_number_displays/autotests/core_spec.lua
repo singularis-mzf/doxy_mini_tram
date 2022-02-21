@@ -193,6 +193,21 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,18={[combine:90x16:0,8={[combine:10x8:0,0=16.png}:10,8={[combine:80x8:0,0=Some Destination.png}}", rd(display_description, "16; Some Destination"));
+        assert.same("[combine:128x128:0,18={[combine:92x16:0,8={[combine:10x8:0,0=16.png}:12,8={[combine:80x8:0,0=Some Destination.png}}", rd(display_description, "16; Some Destination"));
+    end);
+
+    it("renders a long display", function()
+        local display_description = {
+            base_resolution = { width = 128, height = 128 };
+            displays = {{
+                position = { x = 0, y = 18 };
+                height = 24;
+                max_width = 128;
+                center_width = 0;
+                level = "details";
+            }};
+        };
+
+        assert.same("[combine:256x256:0,36={[combine:220x32:0,16={[combine:10x8:0,0=16.png^[resize:20x16}:24,18={[combine:130x8:0,0=Some Loooooong Destination.png^[resize:196x12}}", rd(display_description, "16; Some Loooooong Destination"));
     end);
 end);

@@ -138,7 +138,7 @@ function visual_line_number_displays.blocks_layout:min_scale()
     local s = nil;
 
     for _, block in ipairs(self) do
-        s = math.max(s or math.huge, block.scale);
+        s = math.min(s or math.huge, block.scale);
     end
 
     return s;
@@ -297,7 +297,12 @@ end
 
 --! Returns the current width of the layout at the current blocks’ scales.
 function visual_line_number_displays.display_layout:width()
-    return self.number_section:width() + math.max(self.text_section:width(), self.details_section:width());
+    if next(self.text_section) or next(self.details_section) then
+        -- Include 2px spacing between number and text sections.
+        return self.number_section:width() + math.max(self.text_section:width(), self.details_section:width()) + 2;
+    else
+        return self.number_section:width();
+    end
 end
 
 --! Returns the current height of the layout at the current blocks’ scales.
@@ -340,9 +345,10 @@ function visual_line_number_displays.display_layout:calculate_layout(max_width, 
     end
 
     while self:width() > max_width do
-        local ns = self.number_section:max_scale();
-        local ts = self.text_section:max_scale();
-        local ds = self.details_section:max_scale();
+        -- Each scale may be nil, if the section is empty.
+        local ns = self.number_section:max_scale() or 0;
+        local ts = self.text_section:max_scale() or 0;
+        local ds = self.details_section:max_scale() or 0;
 
         if ns > (math.max(ts, ds)) then
             self.number_section:shrink("width");
@@ -367,7 +373,7 @@ function visual_line_number_displays.display_layout:calculate_layout(max_width, 
 
     self.number_section:align({ x = number_width * 0.5, y = height * 0.5 });
 
-    local text_x_center = (width + number_width) * 0.5;
+    local text_x_center = (width + number_width + 2) * 0.5; -- Include spacing.
 
     local th = self.text_section:height()
     local dh = self.details_section:height();

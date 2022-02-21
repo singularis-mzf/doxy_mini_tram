@@ -109,7 +109,7 @@ function visual_line_number_displays.render_displays(display_description, displa
         layout:calculate_layout(display.max_width, display.height);
 
         -- Required superresolution
-        local superresolution = math.min(superresolution, layout:required_superresolution());
+        superresolution = math.max(superresolution, layout:required_superresolution());
 
         -- Horizontal alignment
         local used_width = layout:width();
@@ -141,8 +141,8 @@ function visual_line_number_displays.render_displays(display_description, displa
         local layout_texture = visual_line_number_displays.render_layout(layouts[i], superresolution);
         layout_texture = visual_line_number_displays.texture_escape(layout_texture);
         local layout_position = {
-            x = display_description.displays[i].position.x + layouts[i].x_offset;
-            y = display_description.displays[i].position.y;
+            x = display_description.displays[i].position.x + layouts[i].x_offset * superresolution;
+            y = display_description.displays[i].position.y * superresolution;
         };
         layout_texture = string.format(":%i,%i=", layout_position.x, layout_position.y) .. layout_texture;
 

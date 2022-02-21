@@ -488,6 +488,7 @@ describe("display_layout", function()
         };
 
         assert.same(reference, display);
+        assert.same({ x = 15, y = 12 }, display:bottom_right());
     end);
 
     it("calculates a less simple layout", function()
@@ -507,7 +508,7 @@ describe("display_layout", function()
 
         local display = dl:new(number_blocks, text_blocks, details_blocks);
 
-        display:calculate_layout(40, 20);
+        display:calculate_layout(41, 20);
 
         local reference = {
             number_section = {{
@@ -518,19 +519,20 @@ describe("display_layout", function()
             }};
             text_section = {{
                 block = text_blocks[1];
-                position = { x = 12, y = 2 };
+                position = { x = 14, y = 2 };
                 scale = 0.75;
                 size = { width = 27, height = 12 };
             }};
             details_section = {{
                 block = details_blocks[1];
-                position = { x = 19, y = 14 };
+                position = { x = 21, y = 14 };
                 scale = 0.5;
                 size = { width = 13, height = 4 };
             }};
         };
 
         assert.same(reference, display);
+        assert.same({ x = 41, y = 18 }, display:bottom_right());
     end);
 
     it("calculates a complex layout", function()
@@ -587,19 +589,19 @@ describe("display_layout", function()
             text_section = {
                 {
                     block = text_blocks[1];
-                    position = { x = 35, y = 13 };
+                    position = { x = 37, y = 13 };
                     scale = 1;
                     size = { width = 40, height = 8 };
                 };
                 {
                     block = text_blocks[2];
-                    position = { x = 77, y = 11 };
+                    position = { x = 79, y = 11 };
                     scale = 1;
                     size = { width = 9, height = 12 };
                 };
                 {
                     block = text_blocks[3];
-                    position = { x = 88, y = 12 };
+                    position = { x = 90, y = 12 };
                     scale = 1;
                     size = { width = 10, height = 10 };
                 };
@@ -607,19 +609,19 @@ describe("display_layout", function()
             details_section = {
                 {
                     block = details_blocks[1];
-                    position = { x = 43, y = 23 };
+                    position = { x = 45, y = 23 };
                     scale = 0.5;
                     size = { width = 13, height = 4 };
                 };
                 {
                     block = details_blocks[2];
-                    position = { x = 58, y = 23 };
+                    position = { x = 60, y = 23 };
                     scale = 0.5;
                     size = { width = 5, height = 5 };
                 };
                 {
                     block = details_blocks[3];
-                    position = { x = 65, y = 23 };
+                    position = { x = 67, y = 23 };
                     scale = 0.5;
                     size = { width = 25, height = 4 };
                 };
@@ -627,5 +629,6 @@ describe("display_layout", function()
         };
 
         assert.same(reference, display);
+        assert.same({ x = 100, y = 37 }, display:bottom_right());
     end);
 end);
