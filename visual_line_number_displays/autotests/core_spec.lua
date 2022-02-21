@@ -181,6 +181,21 @@ end);
 
 describe("render_displays()", function()
     local rd = visual_line_number_displays.render_displays;
+    it("renders empty display", function()
+        local display_description = {
+            base_resolution = { width = 128, height = 128 };
+            displays = {{
+                position = { x = 0, y = 18 };
+                height = 24;
+                max_width = 128;
+                center_width = 0;
+                level = "details";
+            }};
+        };
+
+        assert.same("", rd(display_description, ""));
+    end);
+
     it("renders a basic display", function()
         local display_description = {
             base_resolution = { width = 128, height = 128 };

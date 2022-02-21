@@ -12,12 +12,12 @@ local function render(_self, text, width, height, style)
 end
 
 -- Replacement for Font:get_width().
-local function get_width(text)
+local function get_width(_self, text)
     return 5 * #text;
 end
 
 -- Replacement for Font:get_height().
-local function get_height(line_count)
+local function get_height(_self, line_count)
     return 8 * line_count;
 end
 

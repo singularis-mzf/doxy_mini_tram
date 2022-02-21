@@ -91,6 +91,42 @@ if minitram_konstal_105_liveries and minitram_konstal_105_liveries.add_liveries_
     minitram_konstal_105_liveries.add_liveries_konstal_105(konstal_105_definition);
 end
 
+if visual_line_number_displays and visual_line_number_displays.setup_advtrains_wagon then
+    visual_line_number_displays.setup_advtrains_wagon(konstal_105_definition, {
+            base_resolution = { width = 128, height = 128 };
+            displays = {
+                {
+                    position = { x = 0, y = 3 };
+                    max_width = 128;
+                    center_width = 32;
+                    height = 26;
+                    level = "number";
+                };
+                {
+                    position = { x = 0, y = 99 };
+                    max_width = 128;
+                    center_width = 32;
+                    height = 26;
+                    level = "number";
+                };
+                {
+                    position = { x = 0, y = 35 };
+                    max_width = 128;
+                    center_width = 96;
+                    height = 26;
+                    level = "details";
+                };
+                {
+                    position = { x = 0, y = 67 };
+                    max_width = 128;
+                    center_width = 96;
+                    height = 26;
+                    level = "details";
+                };
+            };
+        }, 1);
+end
+
 local item_name = "minitram_konstal_105:minitram_konstal_105_normal"
 advtrains.register_wagon(item_name, konstal_105_definition, S("Minitram Konstal 105\nKonstal 111N adapted to advtrains gauge."), "minitram_konstal_105_normal_inv.png");
 

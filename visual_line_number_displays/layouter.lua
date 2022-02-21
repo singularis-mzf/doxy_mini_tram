@@ -20,10 +20,10 @@ function visual_line_number_displays.calculate_block_size(block)
 
     local width = 0;
     for _, line in ipairs(text_lines) do
-        width = math.max(visual_line_number_displays.font.get_width(line), width);
+        width = math.max(visual_line_number_displays.font:get_width(line), width);
     end
 
-    local height = visual_line_number_displays.font.get_height(#text_lines);
+    local height = visual_line_number_displays.font:get_height(#text_lines);
 
     local required_width = width;
     local required_height = height;

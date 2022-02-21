@@ -88,6 +88,8 @@ end
 --!
 --! @param layout A display_layout table.
 --! @param sr_scale superresolution scaling factor for this display.
+--!
+--! @returns texture string, or nil if the layout is empty.
 function visual_line_number_displays.render_layout(layout, sr_scale)
     local bottom_right = layout:bottom_right();
     local size = {

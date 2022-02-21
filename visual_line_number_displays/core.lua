@@ -83,6 +83,8 @@ end
 
 --! Returns a texture string.
 --!
+--! Returns an empty string if all layouts are empty.
+--!
 --! @param display_description A display_description table.
 --! @param display_string The string used for the outside train display.
 function visual_line_number_displays.render_displays(display_description, display_string)
@@ -139,14 +141,22 @@ function visual_line_number_displays.render_displays(display_description, displa
     local layout_strings = {}
     for i = 1, #display_description.displays do
         local layout_texture = visual_line_number_displays.render_layout(layouts[i], superresolution);
-        layout_texture = visual_line_number_displays.texture_escape(layout_texture);
-        local layout_position = {
-            x = display_description.displays[i].position.x + layouts[i].x_offset * superresolution;
-            y = display_description.displays[i].position.y * superresolution;
-        };
-        layout_texture = string.format(":%i,%i=", layout_position.x, layout_position.y) .. layout_texture;
 
-        table.insert(layout_strings, layout_texture);
+        if layout_texture then
+            layout_texture = visual_line_number_displays.texture_escape(layout_texture);
+
+            local layout_position = {
+                x = display_description.displays[i].position.x + layouts[i].x_offset * superresolution;
+                y = display_description.displays[i].position.y * superresolution;
+            };
+            layout_texture = string.format(":%i,%i=", layout_position.x, layout_position.y) .. layout_texture;
+
+            table.insert(layout_strings, layout_texture);
+        end
+    end
+
+    if not next(layout_strings) then
+        return "";
     end
 
     return texture_string .. table.concat(layout_strings);
