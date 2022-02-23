@@ -34,7 +34,7 @@ end
 --! to lists of blocks describing a line number display section each.
 --!
 --! @returns number_blocks, text_blocks, details_blocks,
---! which are lists of text_block_description tables.
+--! which are lists of text_block_description tables; and background_color TODO.
 function visual_line_number_displays.parse_display_string(input)
     local block_list = visual_line_number_displays.parse_text_block_string(input);
 
@@ -69,6 +69,15 @@ function visual_line_number_displays.parse_display_string(input)
     visual_line_number_displays.parse_line_breaks_in_blocks(number_blocks);
     visual_line_number_displays.parse_line_breaks_in_blocks(text_blocks);
     visual_line_number_displays.parse_line_breaks_in_blocks(details_blocks);
+
+    local colors = visual_line_number_displays.calculate_line_color(number_blocks);
+    if not colors then
+        colors = visual_line_number_displays.colors_for_line(1);
+    end
+
+    visual_line_number_displays.colorize_blocks(number_blocks, colors);
+    visual_line_number_displays.colorize_blocks(text_blocks, colors);
+    visual_line_number_displays.colorize_blocks(details_blocks, colors);
 
     visual_line_number_displays.parse_entities_in_blocks(number_blocks);
     visual_line_number_displays.parse_entities_in_blocks(text_blocks);

@@ -2,6 +2,94 @@
 --
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
 
+--! @class color_state
+--! A color_state table describes the four colors used for a
+--! line number display, and which of these were set explicitly.
+--!
+--! It contains these fields:
+--! \li @c text Foreground color for text.
+--! \li @c background Primary background color.
+--! \li @c secondary_background Used for background shape patterns.
+--! \li @c feature Feature color, used e. g. for strikethrough.
+--!
+--! These fields are strings of the format @c #rrggbb.
+--!
+--! It can contain these boolean fields: @c text_explicit, @c background_explicit,
+--! @c secondary_background_explicit, and @c feature_explicit.
+--! If these are true, that color will not be calculated automatically.
+
+--! Fixed primary colors for certain line numbers.
+--!
+--! You may add elements to this table.
+--! The key must be an integer or a string.
+--! The value must be a string of the format @c #rrggbb.
+--! The value will be used as initial background color for matching lines.
+--! Secondary background color, text color, and feature color are calculated
+--! automatically to provide good contrast.
+--!
+--! For every block in the line number string,
+--! the block content as string will be looked up in this table.
+--! If the string doesn’t match, an integer will be extracted and looked up.
+--! If the integer doesn’t match, the next block is tried.
+--!
+--! If the value is a color_state table, colors are defined individually.
+--! At least @c background must be provided.
+visual_line_number_displays.line_colors = {};
+
+--! Returns a color_state table for @p line, or nil.
+--!
+--! This function looks up line_colors,
+--! and passing strings or integers gives different results.
+--!
+--! @param line A string or an integer, identifying the train line.
+--! @param current_state A color_state table containing previous color definitions.
+function visual_line_number_displays.colors_for_line(line, current_state)
+    local preset = visual_line_number_displays.line_colors[line] or visual_line_number_displays.fixed_line_colors[line];
+    if not preset then
+        return nil;
+    end
+
+    local result;
+
+    if type(preset) == "table" then
+        result = {
+            text = preset.text;
+            text_explicit = preset.text;
+            background = preset.background;
+            background_explicit = preset.background;
+            secondary_background = preset.secondary_background;
+            secondary_background_explicit = preset.secondary_background;
+            feature = preset.feature;
+            feature_explicit = preset.feature;
+        };
+    else
+        result = {
+            background = preset;
+            background_explicit = true;
+        };
+    end
+
+    local c = current_state or {};
+    if c.text_explicit then
+        result.text = c.text
+        result.text_explicit = true;
+    end
+    if c.background_explicit then
+        result.background = c.background;
+        result.background_explicit = true;
+    end
+    if c.secondary_background_explicit then
+        result.secondary_background = c.secondary_background
+        result.secondary_background_explicit = true;
+    end
+    if c.feature_explicit then
+        result.feature = c.feature;
+        result.feature_explicit = true;
+    end
+
+    return visual_line_number_displays.populate_color_state(result);
+end
+
 --! @class display_description
 --! A display_description table describes the geometry of some displays,
 --! which are available in a texture slot.

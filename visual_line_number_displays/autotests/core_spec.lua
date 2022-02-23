@@ -9,7 +9,9 @@ package.path = "visual_line_number_displays/autotests/?.lua;" .. package.path
 -- See https://rubenwardy.com/minetest_modding_book/en/quality/unit_testing.html
 _G.visual_line_number_displays = {};
 
+require("api");
 require("basic_entities");
+require("colorizer");
 require("core");
 require("layouter");
 require("parser");
@@ -17,6 +19,17 @@ require("renderer");
 
 require("render_mocks");
 require("string_mocks");
+
+local function line_1_colorize(blocks)
+    for _, block in ipairs(blocks) do
+        block.text_color = "#ffffff";
+        block.background_color = "#1e00ff";
+        block.secondary_background_color = "#ffaaff";
+        block.feature_color = "#ff2222";
+    end
+
+    return blocks;
+end
 
 describe("parse_display_string()", function()
     local pds = visual_line_number_displays.parse_display_string;
@@ -37,17 +50,17 @@ describe("parse_display_string()", function()
             };
         };
 
-        assert.same(number_reference, number);
+        assert.same(line_1_colorize(number_reference), number);
         assert.same({}, text);
         assert.same({}, details);
     end);
 
     it("parses usual line numbers 1", function()
-        local number, text, details = pds("[6]\nZürich\nüber Basel");
+        local number, text, details = pds("[1]\nZürich\nüber Basel");
 
         local number_reference = {
             {
-                text = "6";
+                text = "1";
                 background_shape = "square";
                 features = {};
                 required_size = wh(9, 12);
@@ -73,17 +86,17 @@ describe("parse_display_string()", function()
             };
         };
 
-        assert.same(number_reference, number);
-        assert.same(text_reference, text);
-        assert.same(details_reference, details);
+        assert.same(line_1_colorize(number_reference), number);
+        assert.same(line_1_colorize(text_reference), text);
+        assert.same(line_1_colorize(details_reference), details);
     end);
 
     it("parses usual line numbers 2", function()
-        local number, text, details = pds("[6]; Zürich; über Basel");
+        local number, text, details = pds("[1]; Zürich; über Basel");
 
         local number_reference = {
             {
-                text = "6";
+                text = "1";
                 background_shape = "square";
                 features = {};
                 required_size = wh(9, 12);
@@ -109,9 +122,9 @@ describe("parse_display_string()", function()
             };
         };
 
-        assert.same(number_reference, number);
-        assert.same(text_reference, text);
-        assert.same(details_reference, details);
+        assert.same(line_1_colorize(number_reference), number);
+        assert.same(line_1_colorize(text_reference), text);
+        assert.same(line_1_colorize(details_reference), details);
     end);
 
     it("parses complex line numbers", function()
@@ -173,9 +186,9 @@ describe("parse_display_string()", function()
             };
         };
 
-        assert.same(number_reference, number);
-        assert.same(text_reference, text);
-        assert.same(details_reference, details);
+        assert.same(line_1_colorize(number_reference), number);
+        assert.same(line_1_colorize(text_reference), text);
+        assert.same(line_1_colorize(details_reference), details);
     end);
 end);
 
@@ -208,7 +221,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,18={[combine:92x16:0,8={[combine:10x8:0,0=16.png}:12,8={[combine:80x8:0,0=Some Destination.png}}", rd(display_description, "16; Some Destination"));
+        assert.same("[combine:128x128:0,18={[combine:92x16:0,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:12,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
     end);
 
     it("renders a long display", function()
@@ -223,6 +236,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:256x256:0,36={[combine:220x32:0,16={[combine:10x8:0,0=16.png^[resize:20x16}:24,18={[combine:130x8:0,0=Some Loooooong Destination.png^[resize:196x12}}", rd(display_description, "16; Some Loooooong Destination"));
+        assert.same("[combine:256x256:0,36={[combine:220x32:0,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:24,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:196x12}}", rd(display_description, "16; Some Loooooong Destination"));
     end);
 end);

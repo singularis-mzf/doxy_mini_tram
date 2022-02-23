@@ -8,21 +8,6 @@ package.path = "visual_line_number_displays/?.lua;" .. package.path
 -- See https://rubenwardy.com/minetest_modding_book/en/quality/unit_testing.html
 _G.visual_line_number_displays = {};
 
---! Replacement for Minetest’s string:trim() function.
-local function trim(text)
-    local s = #string.match(text, "^%s*");
-    local e = #string.match(text, "%s*$");
-    return string.sub(text, s + 1, #text - e);
-end
-
-string.trim = trim;
-
-describe("string.trim()", function()
-    it("works", function()
-        assert.same("trimmed \ntext", string.trim(" \n trimmed \ntext \n "));
-    end);
-end);
-
 require("parser");
 require("basic_entities");
 

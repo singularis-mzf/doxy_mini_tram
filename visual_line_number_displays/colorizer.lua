@@ -1,3 +1,388 @@
 -- SPDX-FileCopyrightText: 2022 David Hurka <doxydoxy@mailbox.org>
 --
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
+
+visual_line_number_displays.fixed_line_colors = {
+    [0] = "#000000";
+    [1] = "#1e00ff";
+    [2] = "#ff001e";
+    [3] = "#7f007f";
+    [4] = "#007f00";
+    [5] = "#ffa400";
+    [6] = "#ffff00";
+    [7] = "#797979";
+    [8] = "#ff1ed0";
+    [9] = "#00c0b1";
+};
+
+--! Returns integers @c r, @c g, @c b for an input string of format @c #rrggbb.
+local function rgb(color_string)
+    local r = tonumber(string.sub(color_string, 2, 3), 16);
+    local g = tonumber(string.sub(color_string, 4, 5), 16);
+    local b = tonumber(string.sub(color_string, 6, 7), 16);
+    return r, g, b;
+end
+
+-- Lua 5.1 does not support hexadecimal floats.
+local inv_256 = 1 / 256;
+
+--! Returns a color metric distance for color strings @p a and @p b.
+--! (Redmean metric is not an algebraic metric!)
+local function redmean(a, b)
+    local r1, g1, b1 = rgb(a);
+    local r2, g2, b2 = rgb(b);
+    local dr = r1 - r2;
+    local dg = g1 - g2;
+    local db = b1 - b2;
+    local r_ = (r1 + r2) * 0.5;
+    return (2 + r_ * inv_256) * dr * dr + 4 * dg * dg + (2 + (255 - r_) * inv_256) * db * db;
+end
+
+local implicit_color_pool = {
+    -- Dark or desaturated colors for text.
+    text = {
+        "#000000";
+        "#ffffff";
+        "#aa0000";
+        "#00aa00";
+        "#0000aa";
+        "#55aaaa";
+        "#aa55aa";
+        "#aaaa55";
+    };
+    -- Saturated colors for background.
+    background = {
+        "#ff0000";
+        "#00ff00";
+        "#0000ff";
+        "#00ffff";
+        "#ff00ff";
+        "#ffff00";
+    };
+    -- Bright colors for secondary background.
+    secondary_background = {
+        "#ffffff";
+        "#aaffff";
+        "#ffaaff";
+        "#ffffaa";
+    };
+    -- Alert colors for features.
+    feature = {
+        "#ff2222";
+        "#ff8800";
+        "#ff0088";
+        "#882222";
+        "#ffdd33";
+    };
+};
+
+--! Returns a color from @p pool with maximum contrast to colors in @p state.
+--!
+--! @param pool A list of color strings.
+--! @param state A color_state table.
+local function max_contrast(pool, state)
+    local other_colors = {};
+    table.insert(other_colors, state.text);
+    table.insert(other_colors, state.background);
+    table.insert(other_colors, state.secondary_background);
+    table.insert(other_colors, state.feature);
+
+    local best_color;
+    local best_color_distance = 0;
+
+    for _, color in ipairs(pool) do
+        local min_distance = math.huge;
+        for _, other_color in ipairs(other_colors) do
+            min_distance = math.min(min_distance, redmean(color, other_color));
+        end
+        if min_distance > best_color_distance then
+            best_color = color;
+            best_color_distance = min_distance;
+        end
+    end
+
+    return best_color;
+end
+
+--! Returns a color_state table that contains all expclicit colors from
+--! @p current_state, and contrast maximized colors for the other colors.
+function visual_line_number_displays.populate_color_state(current_state)
+    local result = {
+        text_explicit = current_state.text_explicit or false;
+        background_explicit = current_state.background_explicit or false;
+        secondary_background_explicit = current_state.secondary_background_explicit or false;
+        feature_explicit = current_state.feature_explicit or false;
+    };
+
+    if result.text_explicit then
+        result.text = current_state.text;
+    end
+    if result.background_explicit then
+        result.background = current_state.background;
+    end
+    if result.secondary_background_explicit then
+        result.secondary_background = current_state.secondary_background;
+    end
+    if result.feature_explicit then
+        result.feature = current_state.feature;
+    end
+
+    if not result.text then
+        result.text = max_contrast(implicit_color_pool.text, result);
+    end
+    if not result.background then
+        result.background = max_contrast(implicit_color_pool.background, result);
+    end
+    if not result.feature then
+        result.feature = max_contrast(implicit_color_pool.feature, result);
+    end
+    if not result.secondary_background then
+        result.secondary_background = max_contrast(implicit_color_pool.secondary_background, result);
+    end
+
+    return result;
+end
+
+--! Tries to find a line number or line string in @p blocks,
+--! and returns the appropriate color_state table for that line, or nil.
+--!
+--! @param blocks A list of text_block_description tables.
+function visual_line_number_displays.calculate_line_color(blocks)
+    for _, block in ipairs(blocks) do
+        local colors = visual_line_number_displays.colors_for_line(block.text);
+        if colors then
+            return colors;
+        end
+    end
+
+    for _, block in ipairs(blocks) do
+        -- This pattern is faster than bytewise checking for digits.
+        local digits = string.match(block.text, "-?[0-9]+");
+        if digits then
+            local colors = visual_line_number_displays.colors_for_line(tonumber(digits));
+            if colors then
+                return colors;
+            end
+        end
+    end
+
+    return nil;
+end
+
+--! Parses the user-facing color string @p input.
+--!
+--! @returns String of format @c #rrggbb or nil.
+function visual_line_number_displays.parse_color_string(input)
+    if #input == 7 and string.sub(input, 1, 1) == "#" then
+        local number = tonumber(string.sub(input, 2), 16);
+        if number and number > 0 then
+            return input;
+        end
+    elseif #input == 4 and string.sub(input, 1, 1) == "#" then
+        local number = tonumber(string.sub(input, 2), 16);
+        if number and number > 0 then
+            local r = string.sub(input, 2, 2);
+            local g = string.sub(input, 3, 3);
+            local b = string.sub(input, 4, 4);
+            return "#" .. r .. r .. g .. g .. b .. b;
+        end
+    elseif string.sub(input, 1, 1) == '"' and string.sub(input, -1) == '"' then
+        local line_string = string.sub(input, 2, -2);
+        local line_number = tonumber(line_string);
+        local colors;
+        if line_number then
+            colors = visual_line_number_displays.colors_for_line(line_number);
+        end
+        if not colors then
+            colors = visual_line_number_displays.colors_for_line(line_string);
+        end
+        if colors then
+            return colors.background;
+        end
+    end
+
+    return nil;
+end
+
+local color_brace_sequences = {
+    t = "text";
+    text = "text";
+    b = "background";
+    background = "background";
+    s = "secondary_background";
+    secondary_background = "secondary_background";
+    b2 = "secondary_background";
+    p = "secondary_background";
+    pattern = "secondary_background";
+    f = "feature";
+    feature = "feature";
+};
+
+--! Parses the next color brace sequence after @p offset in @p text.
+--!
+--! Returns the position of the brace sequence,
+--! and updates @p colors, which is a color_state table.
+--!
+--! Brace sequences other than colors are not parsed.
+--!
+--! @returns start_position, end_position; or nil.
+function visual_line_number_displays.parse_color_brace_sequence(text, colors, offset)
+    local start_pos = string.find(text, "{", offset, --[[ plain ]] true);
+    if not start_pos then
+        -- No opening brace.
+        return nil;
+    end
+
+    local end_pos = string.find(text, "}", start_pos + 1, --[[ plain ]] true);
+    if not end_pos then
+        -- No closing brace.
+        return nil;
+    end
+
+    local sequence = string.sub(text, start_pos + 1, end_pos - 1);
+    local colon_pos = string.find(sequence, ":", 1, --[[ plain ]] true);
+    if not colon_pos then
+        -- Not a color sequence. Try next one.
+        return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
+    end
+
+    local which = string.sub(sequence, 1, colon_pos - 1);
+    which = color_brace_sequences[which];
+    if not which then
+        -- Invalid color sequence. Try next one.
+        return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
+    end
+
+    local value = string.sub(sequence, colon_pos + 1);
+    if value == "" then
+        -- Clear explicit color.
+        colors[which .. "_explicit"] = false;
+        return start_pos, end_pos;
+    else
+        value = visual_line_number_displays.parse_color_string(value);
+        if not value then
+            -- Invalid color. Try next one.
+            return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
+        end
+    end
+
+    colors[which] = value;
+    colors[which .. "_explicit"] = true;
+
+    return start_pos, end_pos;
+end
+
+--! Colorizes @p block using @p colors and brace sequences.
+--!
+--! Brace sequences in shapeless blocks will modify @p color in-place,
+--! and cause the block to be split.
+--!
+--! @returns A list of text_block_description tables if the block needs to be split.
+function visual_line_number_displays.colorize_block(block, colors)
+    if block.background_shape then
+        -- Shaped block.
+        -- Collect all colors in this block in a color_state,
+        -- and then apply them on the whole block.
+        local block_colors = {};
+        for k, v in pairs(colors) do
+            block_colors[k] = v;
+        end
+
+        local pos = 1;
+        local text = block.text;
+        while pos <= #text do
+            local start_pos, end_pos = visual_line_number_displays.parse_color_brace_sequence(text, block_colors, pos);
+
+            if not start_pos then
+                break;
+            end
+
+            text = string.sub(text, 1, start_pos - 1) .. string.sub(text, end_pos + 1);
+            pos = start_pos;
+        end
+        block.text = text;
+
+        -- Populate color state once after parsing all color sequences.
+        block_colors = visual_line_number_displays.populate_color_state(block_colors);
+
+        block.background_color = block_colors.background;
+        block.secondary_background_color = block_colors.secondary_background;
+        block.text_color = block_colors.text;
+        block.feature_color = block_colors.feature;
+    else
+        -- Shapeless block.
+        -- Initialize block with current colors,
+        -- and split the block at every color sequence.
+
+        local split_blocks = {};
+
+        local text = block.text;
+        while text ~= "" do
+            block.background_color = colors.background;
+            block.secondary_background_color = colors.secondary_background;
+            block.text_color = colors.text;
+            block.feature_color = colors.feature;
+
+            local start_pos, end_pos = visual_line_number_displays.parse_color_brace_sequence(text, colors, 1);
+
+            if not start_pos then
+                -- No more color sequences,
+                -- include the part after the last sequence as a last block.
+                local text_after = string.trim(text);
+                if text_after ~= "" then
+                    local block_after = {};
+                    for k, v in pairs(block) do
+                        block_after[k] = v;
+                    end
+                    block_after.text = text_after;
+                    table.insert(split_blocks, block_after);
+                end
+                break;
+            end
+
+            local text_before = string.trim(string.sub(text, 1, start_pos - 1));
+            if text_before ~= "" then
+                local block_before = {};
+                for k, v in pairs(block) do
+                    block_before[k] = v;
+                end
+                block_before.text = text_before;
+                table.insert(split_blocks, block_before);
+            end
+
+            text = string.sub(text, end_pos + 1);
+
+            -- Populate color state after every color sequence.
+            -- TODO This may be inefficient.
+            local new_colors = visual_line_number_displays.populate_color_state(colors);
+            for k, v in pairs(new_colors) do
+                colors[k] = v;
+            end
+        end
+
+        return split_blocks;
+    end
+end
+
+--! Colorizes @p blocks using @p colors and brace sequences.
+--!
+--! Brace sequences in shapeless blocks will modify @p color in-place.
+--! Brace sequences in shaped blocks are applied only locally.
+--!
+--! @param blocks A list of text_block_description tables.
+--! @param colors A color_state table.
+function visual_line_number_displays.colorize_blocks(blocks, colors)
+    local i = 1;
+    while i <= #blocks do
+        local insert = visual_line_number_displays.colorize_block(blocks[i], colors);
+        if insert then
+            table.remove(blocks, i);
+            for _, block in ipairs(insert) do
+                table.insert(blocks, i, block);
+                i = i + 1;
+            end
+        else
+            i = i + 1;
+        end
+    end
+end

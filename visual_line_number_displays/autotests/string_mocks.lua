@@ -28,3 +28,12 @@ local function split(text, separator)
 end
 
 string.split = split;
+
+--! Replacement for Minetest’s string:trim() function.
+local function trim(text)
+    local s = #string.match(text, "^%s*");
+    local e = #string.match(text, "%s*$");
+    return string.sub(text, s + 1, #text - e);
+end
+
+string.trim = trim;
