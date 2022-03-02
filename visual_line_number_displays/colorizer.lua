@@ -24,7 +24,7 @@ local function rgb(color_string)
 end
 
 -- Lua 5.1 does not support hexadecimal floats.
-local inv_256 = 1 / 256;
+local inv_255 = 1 / 255;
 
 --! Returns a color metric distance for color strings @p a and @p b.
 --! (Redmean metric is not an algebraic metric!)
@@ -35,7 +35,7 @@ local function redmean(a, b)
     local dg = g1 - g2;
     local db = b1 - b2;
     local r_ = (r1 + r2) * 0.5;
-    return (2 + r_ * inv_256) * dr * dr + 4 * dg * dg + (2 + (255 - r_) * inv_256) * db * db;
+    return (2 + r_ * inv_255) * dr * dr + 4 * dg * dg + (2 + (255 - r_) * inv_255) * db * db;
 end
 
 local implicit_color_pool = {
@@ -385,4 +385,77 @@ function visual_line_number_displays.colorize_blocks(blocks, colors)
             i = i + 1;
         end
     end
+end
+
+--! Returns x modulo y.
+--! The reference manual on math.fmod() is broken. It also doesn’t work here.
+local function mod(x, y)
+    return x - y * math.floor(x / y);
+end
+
+--! Returns @c color slightly desaturated.
+--!
+--! Colors are strings with the format @c #rrggbb.
+function visual_line_number_displays.shade_background_color(color)
+    local r, g, b = rgb(color);
+
+    r, g, b = r * inv_255, g * inv_255, b * inv_255;
+
+    local value = math.max(r, g, b);
+    local min = math.min(r, g, b);
+    local chroma = value - min;
+    local lightness = 0.5 * (value + min);
+
+    -- -1 .. 5
+    local hue;
+    if chroma == 0 then
+        hue = 0;
+    elseif value == r then
+        hue = (g - b) / chroma;
+    elseif value == g then
+        hue = 2 + (b - r) / chroma;
+    else
+        hue = 4 + (r - g) / chroma;
+    end
+
+    local saturation;
+    if lightness == 0 or lightness == 1 then
+        saturation = 0;
+    else
+        saturation = (value - lightness) / math.min(lightness, 1 - lightness);
+    end
+
+    if lightness > 0.5 then
+        lightness = lightness - 0.15;
+    else
+        lightness = lightness + 0.05;
+    end
+
+    if saturation > 0.5 then
+        saturation = saturation - 0.4;
+    else
+        saturation = saturation * 1.3;
+    end
+
+    chroma = math.min(chroma, (1 - math.abs(2 * lightness - 1)) * saturation);
+    min = lightness - 0.5 * chroma;
+    local x = chroma * (1 - math.abs(mod(hue, 2) - 1));
+    if hue < 0 then
+        r, g, b = chroma, 0, x;
+    elseif hue < 1 then
+        r, g, b = chroma, x, 0;
+    elseif hue < 2 then
+        r, g, b = x, chroma, 0;
+    elseif hue < 3 then
+        r, g, b = 0, chroma, x;
+    elseif hue < 4 then
+        r, g, b = 0, x, chroma;
+    else
+        r, g, b = x, 0, chroma;
+    end
+
+    r, g, b = r + min, b + min, g + min;
+    r, g, b = math.floor(r * 255), math.floor(b * 255), math.floor(g * 255);
+
+    return string.format("#%02x%02x%02x", r, g, b);
 end

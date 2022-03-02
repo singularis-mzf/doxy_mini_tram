@@ -221,7 +221,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,18={[combine:92x16:0,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:12,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
+        assert.same("[combine:128x128:0,18={vlnd_pixel.png^[multiply:#5747d1^[resize:92x24^[combine:92x16:0,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:12,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
     end);
 
     it("renders a long display", function()
@@ -236,6 +236,21 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:256x256:0,36={[combine:220x32:0,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:24,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:196x12}}", rd(display_description, "16; Some Loooooong Destination"));
+        assert.same("[combine:256x256:0,36={vlnd_pixel.png^[multiply:#5747d1^[resize:220x48^[combine:220x32:0,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:24,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:196x12}}", rd(display_description, "16; Some Loooooong Destination"));
+    end);
+
+    it("renders a display with pattern background", function()
+        local display_description = {
+            base_resolution = { width = 128, height = 128 };
+            displays = {{
+                position = { x = 0, y = 4 };
+                height = 24;
+                max_width = 128;
+                center_width = 0;
+                level = "number";
+            }};
+        };
+
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:13x24^[combine:13x18:0,5={vlnd_circle.png^[resize:13x13^[multiply:#1e00ff^(vlnd_x.png^[resize:13x13^[mask:{vlnd_circle.png^[resize:13x13}^[multiply:#ffaaff)}:1,7={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "(16)\\/"));
     end);
 end);

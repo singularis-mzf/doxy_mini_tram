@@ -4,11 +4,170 @@
 
 --! Escapes @p input for use in Minetest texture strings.
 --!
---! This is shit, Minetest should just implement parentheses correctly,
---! and everything would be cool.
---! (Honestly, the whole texture string syntax is shit.)
+--! This is bad, texture grouping with parentheses would make more sense.
 function visual_line_number_displays.texture_escape(input)
-    return string.gsub(input, "[:^]", "\\%1");
+    return string.gsub(input, "[:^\\]", "\\%1");
+end
+
+--! Renders a white background shape of size @p size.
+--!
+--! @param size Table with elements @p width and @p height.
+--! @param shape Name of the background shape.
+--!
+--! @returns Standalone texture string.
+function visual_line_number_displays.render_background_shape(size, shape)
+    if shape == "square" then
+        return string.format("vlnd_pixel.png^[resize:%ix%i", size.width, size.height);
+    elseif shape == "diamond" then
+        return string.format("vlnd_diamond.png^[resize:%ix%i", size.width, size.height);
+    elseif shape == "round" then
+        local circle = string.format("vlnd_circle.png^[resize:%ix%i", size.height, size.height);
+
+        if size.width == size.height then
+            return circle;
+        end
+
+        circle = visual_line_number_displays.texture_escape(circle);
+
+        local rectangle = string.format("vlnd_pixel.png^[resize:%ix%i", size.width - math.floor(size.height * 0.5) * 2, size.height);
+        rectangle = visual_line_number_displays.texture_escape(rectangle);
+
+        return string.format("[combine:%ix%i:0,0=%s:%i,0=%s:%i,0=%s", size.width, size.height, circle, math.floor(size.height * 0.5), rectangle, size.width - size.height, circle);
+    else
+        error("Invalid background shape: " .. shape);
+    end
+end
+
+--! Renders a transparency limited pattern for
+--! the secondary background color of a background pattern.
+--!
+--! @param size Table with elements @p width and @p height.
+--! @param pattern Name of the background pattern. Not all are supported.
+--! @param align For diagonal patterns, may be @c stretch or @c center.
+--!
+--! @returns Standalone texture string.
+function visual_line_number_displays.render_background_pattern(size, pattern, align)
+    local size_string = string.format("%ix%i", size.width, size.height);
+
+    if pattern == "left" then
+        return "vlnd_left.png^[resize:" .. size_string;
+    elseif pattern == "upper" then
+        return "vlnd_upper.png^[resize:" .. size_string;
+    elseif pattern == "plus_4" then
+        return "vlnd_plus.png^[resize:" .. size_string;
+    end
+
+    if align == "stretch" then
+        if pattern == "x_upper" then
+            return "vlnd_x.png^[resize:" .. size_string;
+        elseif pattern == "diag_1" then
+            return "vlnd_corner_1.png^[resize:" .. size_string;
+        elseif pattern == "diag_2" then
+            return "vlnd_corner_2.png^[resize:" .. size_string;
+        end
+    else -- align == "center"
+        if size.width <= size.height then
+            -- For square aspects, using stretch is simpler.
+            -- There should not be any shapes taller than wide.
+            return visual_line_number_displays.render_background_pattern(size, pattern, "stretch");
+        end
+
+        -- Put pattern image in the center,
+        -- and fill up with rectangles on the sides.
+
+        local combine = "[combine:" .. size_string;
+
+        -- Horizontal placement and width of components.
+        local middle = math.floor((size.width - size.height) * 0.5);
+        local right = middle + size.height;
+        local right_width = size.width - right;
+
+        local middle_size = string.format("%ix%i", size.height, size.height);
+        local right_size = string.format("%ix%i", right_width, size.height);
+
+        if pattern == "x_upper" then
+            local x = visual_line_number_displays.texture_escape("vlnd_x.png^[resize:" ..middle_size);
+            return combine .. string.format(":%i,0=", middle) .. x;
+        elseif pattern == "diag_1" then
+            local diag = visual_line_number_displays.texture_escape("vlnd_corner_1.png^[resize:" .. middle_size);
+            local rect = visual_line_number_displays.texture_escape("vlnd_pixel.png^[resize:" .. right_size);
+            return combine .. string.format(":%i,0=%s:%i,0=%s", middle, diag, right, rect);
+        elseif pattern == "diag_2" then
+            local diag = visual_line_number_displays.texture_escape("vlnd_corner_2.png^[resize:" .. middle_size);
+            local rect = visual_line_number_displays.texture_escape("vlnd_pixel.png^[resize:" .. right_size);
+            return combine .. string.format(":%i,0=%s:%i,0=%s", middle, diag, right, rect);
+        end
+    end
+
+    error("Invalid background pattern: " .. pattern);
+end
+
+--! Renders a text block background including shape and pattern.
+--!
+--! @param size Table with elements @p width and @p height.
+--! @param shape Name of the background shape. (Required)
+--! @param pattern Name of the background pattern or nil.
+--! @param color_1 Primary background color string.
+--! @param color_2 Secondary background color string, used for patterns.
+--!
+--! @returns Standalone texture string.
+function visual_line_number_displays.render_block_background(size, shape, pattern, color_1, color_2)
+    if not pattern then
+        local texture = visual_line_number_displays.render_background_shape(size, shape);
+
+        if color_1 ~= "#ffffff" then
+            texture = texture .. "^[multiply:" .. color_1;
+        end
+
+        return texture;
+    else
+        -- Normalize symmetric patterns.
+        if pattern == "lower" then
+            pattern = "upper";
+            color_1, color_2 = color_2, color_1;
+        elseif pattern == "right" then
+            pattern = "left";
+            color_1, color_2 = color_2, color_1;
+        elseif pattern == "diag_3" then
+            pattern = "diag_1";
+            color_1, color_2 = color_2, color_1;
+        elseif pattern == "diag_4" then
+            pattern = "diag_2";
+            color_1, color_2 = color_2, color_1;
+        elseif pattern == "x_left" then
+            pattern = "x_upper";
+            color_1, color_2 = color_2, color_1;
+        elseif pattern == "plus_1" then
+            pattern = "plus_4";
+            color_1, color_2 = color_2, color_1;
+        end
+
+        -- Render shape texture.
+        local shape_texture = visual_line_number_displays.render_background_shape(size, shape);
+
+        -- Render pattern texture.
+        local align = "stretch";
+        if shape == "round" then
+            align = "center";
+        end
+        local pattern_texture = visual_line_number_displays.render_background_pattern(size, pattern, align);
+
+        -- Clip pattern to shape.
+        if shape ~= "square" then
+            pattern_texture = pattern_texture .. "^[mask:" .. visual_line_number_displays.texture_escape(shape_texture);
+        end
+
+        -- Colorize.
+        if color_1 ~= "#ffffff" then
+            shape_texture = shape_texture .. "^[multiply:" .. color_1;
+        end
+
+        if color_2 ~= "#ffffff" then
+            pattern_texture = pattern_texture .. "^[multiply:" .. color_2;
+        end
+
+        return shape_texture .. "^(" .. pattern_texture .. ")";
+    end
 end
 
 --! Makes a texture string depicting @p block.
@@ -58,6 +217,15 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
         height = layout_text_size.height * sr_scale;
     };
 
+    -- Render background
+    local background_texture = "";
+    if block.block.background_shape then
+        local b = visual_line_number_displays.render_block_background(block_size, block.block.background_shape, block.block.background_pattern, block.block.background_color, block.block.secondary_background_color);
+
+        b = visual_line_number_displays.texture_escape(b);
+        background_texture = string.format(":%i,%i=", block_position.x, block_position.y) .. b;
+    end
+
     -- Render text.
     local text_color = block.block.text_color;
     if text_color == "black" or text_color == "#000000" then
@@ -78,7 +246,7 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
 
     text_texture = string.format(":%i,%i=", text_position.x, text_position.y) .. text_texture;
 
-    return text_texture;
+    return background_texture .. text_texture;
 end
 
 --! Makes a texture string depicting @p layout.
@@ -87,10 +255,12 @@ end
 --! @p layout starts with top-left at origin.
 --!
 --! @param layout A display_layout table.
+--! @param fixed_height Intended height of the display without superresolution.
 --! @param sr_scale superresolution scaling factor for this display.
+--! @param background_color Color for the whole display background.
 --!
 --! @returns texture string, or nil if the layout is empty.
-function visual_line_number_displays.render_layout(layout, sr_scale)
+function visual_line_number_displays.render_layout(layout, fixed_height, sr_scale, background_color)
     local bottom_right = layout:bottom_right();
     local size = {
         width = bottom_right.x * sr_scale;
@@ -110,5 +280,7 @@ function visual_line_number_displays.render_layout(layout, sr_scale)
         return nil;
     end
 
-    return texture_string .. table.concat(block_strings);
+    local background = string.format("vlnd_pixel.png^[multiply:%s^[resize:%ix%i", background_color, size.width, fixed_height * sr_scale);
+
+    return background .. "^" .. texture_string .. table.concat(block_strings);
 end

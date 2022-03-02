@@ -33,8 +33,11 @@ end
 --! Converts @p input from a line number string (with blocks syntax)
 --! to lists of blocks describing a line number display section each.
 --!
+--! Returned blocks have escape sequences and coloration applied,
+--! and minimum sizes calculated.
+--!
 --! @returns number_blocks, text_blocks, details_blocks,
---! which are lists of text_block_description tables; and background_color TODO.
+--! which are lists of text_block_description tables; and background_color.
 function visual_line_number_displays.parse_display_string(input)
     local block_list = visual_line_number_displays.parse_text_block_string(input);
 
@@ -87,7 +90,9 @@ function visual_line_number_displays.parse_display_string(input)
     visual_line_number_displays.calculate_block_sizes(text_blocks);
     visual_line_number_displays.calculate_block_sizes(details_blocks);
 
-    return number_blocks, text_blocks, details_blocks;
+    local background_color = visual_line_number_displays.shade_background_color(colors.background);
+
+    return number_blocks, text_blocks, details_blocks, background_color;
 end
 
 --! Returns a texture string.
@@ -101,7 +106,7 @@ function visual_line_number_displays.render_displays(display_description, displa
         return "";
     end
 
-    local number, text, details = visual_line_number_displays.parse_display_string(display_string);
+    local number, text, details, background_color = visual_line_number_displays.parse_display_string(display_string);
 
     local layouts = {};
     local superresolution = 1;
@@ -149,7 +154,7 @@ function visual_line_number_displays.render_displays(display_description, displa
 
     local layout_strings = {}
     for i = 1, #display_description.displays do
-        local layout_texture = visual_line_number_displays.render_layout(layouts[i], superresolution);
+        local layout_texture = visual_line_number_displays.render_layout(layouts[i], display_description.displays[i].height, superresolution, background_color);
 
         if layout_texture then
             layout_texture = visual_line_number_displays.texture_escape(layout_texture);

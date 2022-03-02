@@ -269,11 +269,16 @@ end
 --! @class display_layout
 --! A display_layout object describes placement and scale of text blocks
 --! on a display.
---!
---! It contains three blocks_layout tables called
---! @c number_section, @c text_section and @c details_section.
---! These blocks_layout tables may be empty.
-visual_line_number_displays.display_layout = {};
+visual_line_number_displays.display_layout = {
+    --! blocks_layout object to appear at the left.
+    number_section = {};
+
+    --! blocks_layout object to appear at the right.
+    text_section = {};
+
+    --! blocks_layout object to appear below @c text_section.
+    details_section = {};
+};
 
 --! Creates a display_layout object from text_block_description table lists.
 --!
