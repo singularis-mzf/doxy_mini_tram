@@ -11,7 +11,7 @@ local function utf_8_characters(input)
     -- I think this function would be useful in the Minetest Lua API.
     local position = 1;
 
-    function iterator()
+    local function iterator()
         if position > #input then
             return nil;
         end

@@ -117,7 +117,7 @@ end
 --! @param display_description A display_description table.
 --! @param slot Which texture slot shall receive the displays.
 function visual_line_number_displays.setup_advtrains_wagon(wagon_definition, display_description, slot)
-    old_on_step = wagon_definition.custom_on_step;
+    local old_on_step = wagon_definition.custom_on_step;
 
     wagon_definition.custom_on_step = function(...)
         visual_line_number_displays.advtrains_wagon_on_step(display_description, slot, ...);
