@@ -21,9 +21,9 @@ local function line_1_colors()
         background_explicit = true;
         text = "#ffffff";
         text_explicit = false;
-        secondary_background = "#ffaaff";
+        secondary_background = "#000000";
         secondary_background_explicit = false;
-        feature = "#ff2222";
+        feature = "#ff8800";
         feature_explicit = false;
     };
 end
@@ -31,8 +31,8 @@ end
 local function line_1_colorize(block)
     block.background_color = "#1e00ff";
     block.text_color = "#ffffff";
-    block.secondary_background_color = "#ffaaff";
-    block.feature_color = "#ff2222";
+    block.secondary_background_color = "#000000";
+    block.feature_color = "#ff8800";
     return block;
 end
 
@@ -56,7 +56,7 @@ describe("calculate_line_color()", function()
         assert.same(nil, clc(ptbs("")));
     end);
 
-    it("fails for missing line number", function()
+    it("fails for missing line number (instead of returning a default)", function()
         assert.same(nil, clc(ptbs("not a line number [neither]")));
     end);
 
@@ -66,6 +66,14 @@ describe("calculate_line_color()", function()
         assert.same(line_1_colors(), clc(ptbs("[1] (also 2)")));
         assert.not_same(line_1_colors(), clc(ptbs("(also 2) [1]")));
         assert.same(line_1_colors(), clc(ptbs("1A")));
+    end);
+
+    it("avoids any brace sequences", function()
+        assert.same(line_1_colors(), clc(ptbs("something {t:\"2\"} else [1]")));
+        assert.same(line_1_colors(), clc(ptbs("{b:#123} Line 1")));
+        assert.same(line_1_colors(), clc(ptbs("{3} [1] (also 2)")));
+        assert.not_same(line_1_colors(), clc(ptbs("{f:#dd1}(also 2) [1]")));
+        assert.same(line_1_colors(), clc(ptbs("1A {s:#ab1}")));
     end);
 end);
 
@@ -288,6 +296,7 @@ describe("colorize_blocks", function()
         reference[5].background_shape = "diamond";
         reference[2].background_color = "#1100ff";
         reference[4].background_color = "#1111ff";
+        reference[4].feature_color = "#ffdd33";
         reference[5].background_color = "#2200ff";
 
         local color_reference = line_1_colors();

@@ -24,8 +24,8 @@ local function line_1_colorize(blocks)
     for _, block in ipairs(blocks) do
         block.text_color = "#ffffff";
         block.background_color = "#1e00ff";
-        block.secondary_background_color = "#ffaaff";
-        block.feature_color = "#ff2222";
+        block.secondary_background_color = "#000000";
+        block.feature_color = "#ff8800";
     end
 
     return blocks;
@@ -251,6 +251,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:13x24^[combine:13x18:0,5={vlnd_circle.png^[resize:13x13^[multiply:#1e00ff^(vlnd_x.png^[resize:13x13^[mask:{vlnd_circle.png^[resize:13x13}^[multiply:#ffaaff)}:1,7={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "(16)\\/"));
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:13x24^[combine:13x18:0,5={vlnd_circle.png^[resize:13x13^[multiply:#1e00ff^(vlnd_x.png^[resize:13x13^[mask:{vlnd_circle.png^[resize:13x13}^[multiply:#000000)}:1,7={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "(16)\\/"));
     end);
 end);

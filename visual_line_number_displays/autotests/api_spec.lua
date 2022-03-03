@@ -20,9 +20,9 @@ describe("colors_for_line()", function()
                 background_explicit = true;
                 text = "#ffffff";
                 text_explicit = false;
-                secondary_background = "#ffaaff";
+                secondary_background = "#000000";
                 secondary_background_explicit = false;
-                feature = "#ff2222";
+                feature = "#ff8800";
                 feature_explicit = false;
             }, cfl(1));
         assert.same({
@@ -30,7 +30,7 @@ describe("colors_for_line()", function()
                 background_explicit = true;
                 text = "#ffffff";
                 text_explicit = false;
-                secondary_background = "#ffaaff";
+                secondary_background = "#000000";
                 secondary_background_explicit = false;
                 feature = "#ffdd33";
                 feature_explicit = false;

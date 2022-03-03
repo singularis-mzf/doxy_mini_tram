@@ -27,25 +27,37 @@ end
 local inv_255 = 1 / 255;
 
 --! Returns a color metric distance for color strings @p a and @p b.
---! (Redmean metric is not an algebraic metric!)
-local function redmean(a, b)
+local function redmean_sqr(a, b)
+    -- Components.
     local r1, g1, b1 = rgb(a);
     local r2, g2, b2 = rgb(b);
+
+    -- Redmean quasi-metric:
+    -- delta_color variables
     local dr = r1 - r2;
     local dg = g1 - g2;
     local db = b1 - b2;
+    -- mean_red variable
     local r_ = (r1 + r2) * 0.5;
-    return (2 + r_ * inv_255) * dr * dr + 4 * dg * dg + (2 + (255 - r_) * inv_255) * db * db;
+    -- color_weight variables
+    local rw = (2 + r_ * inv_255);
+    local gw = 4;
+    local bw = 5 - rw;
+
+    -- Luma metric using redmean weights as luma coefficients
+    local dl = (r1 * rw + g1 * gw + b1 * bw) - (r2 * rw + g2 * gw + b2 * bw);
+    local lw = 3;
+    return rw * dr * dr + gw * dg * dg + bw * db * db + lw * dl * dl;
 end
 
 local implicit_color_pool = {
-    -- Dark or desaturated colors for text.
+    -- Desaturated colors for text.
     text = {
         "#000000";
         "#ffffff";
-        "#aa0000";
-        "#00aa00";
-        "#0000aa";
+        "#ff2222";
+        "#22ff22";
+        "#2222ff";
         "#55aaaa";
         "#aa55aa";
         "#aaaa55";
@@ -59,12 +71,16 @@ local implicit_color_pool = {
         "#ff00ff";
         "#ffff00";
     };
-    -- Bright colors for secondary background.
+    -- Dark and bright colors for secondary background.
     secondary_background = {
+        "#000000";
         "#ffffff";
         "#aaffff";
         "#ffaaff";
         "#ffffaa";
+        "#550000";
+        "#005500";
+        "#000055";
     };
     -- Alert colors for features.
     feature = {
@@ -93,7 +109,7 @@ local function max_contrast(pool, state)
     for _, color in ipairs(pool) do
         local min_distance = math.huge;
         for _, other_color in ipairs(other_colors) do
-            min_distance = math.min(min_distance, redmean(color, other_color));
+            min_distance = math.min(min_distance, redmean_sqr(color, other_color));
         end
         if min_distance > best_color_distance then
             best_color = color;
@@ -148,6 +164,7 @@ end
 --!
 --! @param blocks A list of text_block_description tables.
 function visual_line_number_displays.calculate_line_color(blocks)
+    -- Match whole string.
     for _, block in ipairs(blocks) do
         local colors = visual_line_number_displays.colors_for_line(block.text);
         if colors then
@@ -155,9 +172,30 @@ function visual_line_number_displays.calculate_line_color(blocks)
         end
     end
 
+    -- Match any integer in the string.
     for _, block in ipairs(blocks) do
+        -- Remove all brace sequences, because these may contain digits.
+        local text = "";
+        local pos = 1;
+        while pos <= #block.text do
+            local left = string.find(block.text, "{", pos, --[[ plain ]] true);
+            if not left then
+                text = text .. string.sub(block.text, pos);
+                break;
+            end
+
+            local right = string.find(block.text, "}", left + 1, --[[ plain ]] true);
+            if not right then
+                text = text .. string.sub(block.text, pos);
+                break;
+            end
+
+            text = text .. string.sub(block.text, pos, left - 1);
+            pos = right + 1;
+        end
+
         -- This pattern is faster than bytewise checking for digits.
-        local digits = string.match(block.text, "-?[0-9]+");
+        local digits = string.match(text, "-?[0-9]+");
         if digits then
             local colors = visual_line_number_displays.colors_for_line(tonumber(digits));
             if colors then
