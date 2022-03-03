@@ -7,13 +7,21 @@
 
 visual_line_number_displays.basic_entities = {
     lcurl = "{";
+    llcurl = "{{";
     rcurl = "}";
+    rrcurl = "}}";
     lbrak = "[";
+    llbrak = "[[";
     rbrak = "]";
+    rrbrak = "]]";
     lpar = "(";
+    llpar = "((";
     rpar = ")";
+    rrpar = "))";
     lt = "<";
+    ltlt = "<<";
     gt = ">";
+    gtgt = ">>";
 
     bar = "|";
     vline = "|";

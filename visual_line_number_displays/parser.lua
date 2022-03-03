@@ -292,19 +292,19 @@ function visual_line_number_displays.parse_text_block_string(input)
             -- Inside shaped block
             if #current_block.text == 0 then
                 -- Background feature.
-                -- Example case: “[/A]”
+                -- Example case: “[[/A]]”
                 local feature = background_features[character];
                 current_block.features[feature] = true;
             else
                 -- Possibly foreground feature.
-                -- Example cases: “[A/]”, “[ab/c]”
+                -- Example cases: “[[A/]]”, “[[ab/c]]”
                 text_after = text_after .. character;
             end
         elseif not current_block.background_shape then
             -- Before shaped block or in shapeless block.
             if #current_block.text == 0 then
                 -- Background feature or background pattern.
-                -- Example cases: “/A”, “/[A]”, “\/[A]”
+                -- Example cases: “/A”, “/[[A]]”, “\/[[A]]”
                 local feature = background_features[character];
                 current_block.features[feature] = true;
 
@@ -321,7 +321,7 @@ function visual_line_number_displays.parse_text_block_string(input)
         else
             -- After shaped block.
             -- Background pattern.
-            -- Example cases: “[A]/”, “[A]\/”
+            -- Example cases: “[[A]]/”, “[[A]]\/”
             local pattern = (current_block.background_pattern or "");
             pattern = background_patterns_after[pattern .. character];
             if pattern then
@@ -333,9 +333,9 @@ function visual_line_number_displays.parse_text_block_string(input)
     end
 
     local background_block_starts = {
-        ["["] = "square";
-        ["("] = "round";
-        ["<"] = "diamond";
+        ["[["] = "square";
+        ["(("] = "round";
+        ["<<"] = "diamond";
     };
 
     -- Tries to parse a background block start character.
@@ -346,55 +346,70 @@ function visual_line_number_displays.parse_text_block_string(input)
             return false;
         end
 
-        local shape = background_block_starts[character];
+        -- Sequence includes the last character of previous text.
+        -- Opening brackets always go to text_after.
+        local sequence = string.sub(text_after, -1) .. character;
+
+        local shape = background_block_starts[sequence];
         if not shape then
-            -- Not a background block start character.
+            -- Not a background block start sequence
             return false;
         end
 
-        if #text_after > 0 then
-            local a, b = split_at_last_space(text_after);
-            if b then
-                -- If the current text_after contains spaces,
-                -- the part after the last space is a pattern for this block.
-                -- Examples: “abc /[A]”, “abc/ |[A]”
-                text_after = a;
+        text_after = string.sub(text_after, 1, -2);
 
-                finish_block();
-
-                for _, c in utf_8_characters(b) do
-                    parse_pattern_or_feature(c);
-                end
-
-                -- parse_pattern_or_feature() has parsed patterns as features too.
-                current_block.features = {};
-            else
-                -- Otherwise, the text_after belongs to the previous block anyway.
-                finish_block();
-            end
-        elseif #current_block.text > 0 then
+        if (current_block.text ~= "") or (text_after ~= "") then
             -- The previous (shapeless) block has text,
             -- so features on that block should stay on that block.
-            -- This includes cases like “ [A]”, “/ [A]”, or “abc/[A]”.
-            finish_block();
+            -- This includes cases like “ [[A]]”, “/ [[A]]”, or “abc/[[A]]”.
+
+            if text_after ~= "" then
+                -- For cases like “abc/ |[[ABC]]”,
+                -- text_after needs to be split at the last space.
+                local last_space;
+                for pos, c in utf_8_characters(text_after) do
+                    if whitespace_characters[c] then
+                        last_space = pos;
+                    end
+                end
+
+                if last_space then
+                    text_before = string.sub(text_after, last_space + 1);
+                    text_after = string.sub(text_after, 1, last_space);
+
+                    finish_block();
+
+                    for _, c in utf_8_characters(text_before) do
+                        parse_pattern_or_feature(c);
+                    end
+
+                    -- Remove unneeded result of parse_pattern_or_feature().
+                    current_block.features = {};
+                else
+                    finish_block();
+                end
+            else
+                finish_block();
+            end
         else
             -- Any previous characters were background patterns,
             -- which are already parsed, but are parsed as background feature too.
-            -- This includes cases like “/[A]”, “|-[A]”, or “ /[A]”.
+            -- This includes cases like “/[[A]]”, “|-[[A]]”, or “ /[[A]]”.
             -- Clear the features.
             current_block.features = {};
         end
 
         current_block.background_shape = shape;
+        current_block.text = "";
         background_block_open = true;
 
         return true;
     end
 
     local background_block_ends = {
-        ["]"] = "square";
-        [")"] = "round";
-        [">"] = "diamond";
+        ["]]"] = "square";
+        ["))"] = "round";
+        [">>"] = "diamond";
     };
 
     -- Tries to parse a background block end character.
@@ -404,9 +419,14 @@ function visual_line_number_displays.parse_text_block_string(input)
             return false;
         end
 
-        local shape = background_block_ends[character];
+        -- Sequence includes the last character of previous text.
+        -- Closing brackets always go to text_after.
+        local sequence = string.sub(text_after, -1) .. character;
+
+        local shape = background_block_ends[sequence];
         if shape == current_block.background_shape then
             background_block_open = false;
+            text_after = string.sub(text_after, 1, -2);
             return true;
         else
             return false;
@@ -440,30 +460,86 @@ function visual_line_number_displays.parse_text_block_string(input)
         return false;
     end
 
+    local opening_brackets = {
+        ["["] = true;
+        ["("] = true;
+        ["<"] = true;
+    };
+
+    local closing_brackets = {
+        square = "]";
+        round = ")";
+        diamond = ">";
+    };
+
     -- Parses a character as plain text.
     -- This is done if the character is an actual text character,
     -- or its special interpretation failed.
     local function parse_text_character(character)
+        if (not background_block_open) and opening_brackets[character] then
+            -- This may be the beginning of a shaped block,
+            -- which isn’t yet recognized by parse_background_block_start().
+            -- Add this to text_after, so parse_background_block_start()
+            -- can pick it up and end the previous block if necessary.
+
+            -- If there were brackets in text_after previously,
+            -- the part of text_after before this bracket is actual text.
+            for pos, c in utf_8_characters(text_after) do
+                if opening_brackets[c] then
+                    current_text = current_text .. string.sub(text_after, 1, pos);
+                    text_after = string.sub(text_after, pos + 1);
+                    break;
+                end
+            end
+
+            text_after = text_after .. character;
+            return;
+        end
+
+        if background_block_open and (character == closing_brackets[current_block.background_shape]) then
+            -- This may be the end of a shaped block,
+            -- which isn’t yet recognized by parse_background_block_end().
+            -- Add this to text_after, so parse_background_block_end()
+            -- can pick it up if necessary.
+
+            -- If there were such brackets in text_after previously,
+            -- the part of text_after before this bracket is actual text.
+            local e = string.find(text_after, character, 1, --[[ plain ]] true);
+            if e then
+                current_block.text = current_block.text .. string.sub(text_after, 1, e);
+                text_after = string.sub(text_after, e + 1);
+            end
+
+            text_after = text_after .. character;
+            return;
+        end
+
         if current_block.background_shape and (not background_block_open) then
             -- This is the beginning of the next shapeless block
             -- after a shaped block.
-            -- Example: “[A]b”
+            -- Example: “[[A]]b”
             finish_block();
         end
 
         if #current_block.text == 0 then
-            -- text_after can not contain anything now.
-            if (not background_block_open) and whitespace_characters[character] then
-                -- Do not start a shapeless block with whitespace.
+            -- text_after may already contain opening brackets.
+            -- (Yes, this makes the meaning of text_after even more weird.)
+            if text_after == "" then
+                if (not background_block_open) and whitespace_characters[character] then
+                    -- Do not start a shapeless block with whitespace.
+                else
+                    current_block.text = character;
+                end
             else
-                current_block.text = character;
+                current_block.text = text_after .. character;
+                text_after = "";
             end
         else
             if whitespace_characters[character] and (not background_block_open) then
                 -- Do not cause text_after to be considered text
                 -- if it is followed by whitespace.
-                -- Examples: “abc/ [A]”, “abc/ /[A]”
-                -- But not: “[abc/ ]”
+                -- Examples: “abc/ [[A]]”, “abc/ /[[A]]”
+                -- But not: “[[abc/ ]]”
                 text_after = text_after .. character;
             else
                 -- text_after needs to be applied,

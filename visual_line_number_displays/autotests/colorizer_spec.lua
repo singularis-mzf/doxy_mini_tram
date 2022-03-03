@@ -293,7 +293,7 @@ describe("colorize_blocks", function()
     end);
 
     it("colorizes a colored display with shaped blocks", function()
-        local blocks = ptbs("A [B{b:#10f}] C {b:#20f} ({b:#11f} D) <E>");
+        local blocks = ptbs("A [[B{b:#10f}]] C {b:#20f} (({b:#11f} D)) <<E>>");
         local colors = line_1_colors();
 
         cb(blocks, colors);

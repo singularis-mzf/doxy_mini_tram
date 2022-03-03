@@ -56,7 +56,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses usual line numbers 1", function()
-        local number, text, details = pds("[1]\nZürich\nüber Basel");
+        local number, text, details = pds("[[1]]\nZürich\nüber Basel");
 
         local number_reference = {
             {
@@ -92,7 +92,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses usual line numbers 2", function()
-        local number, text, details = pds("[1]; Zürich; über Basel");
+        local number, text, details = pds("[[1]]; Zürich; über Basel");
 
         local number_reference = {
             {
@@ -128,7 +128,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses complex line numbers", function()
-        local number, text, details = pds("\\/<RE11>; Köln HBF [U] (S)\nüber: (S) Chorweiler  {lpar}tief{rpar}");
+        local number, text, details = pds("\\/<<RE11>>; Köln HBF [[U]] ((S))\nüber: ((S)) Chorweiler  {lpar}tief{rpar}");
 
         local number_reference = {
             {
@@ -251,6 +251,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:13x24^[combine:13x18:0,5={vlnd_circle.png^[resize:13x13^[multiply:#1e00ff^(vlnd_x.png^[resize:13x13^[mask:{vlnd_circle.png^[resize:13x13}^[multiply:#000000)}:1,7={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "(16)\\/"));
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:13x24^[combine:13x18:0,5={vlnd_circle.png^[resize:13x13^[multiply:#1e00ff^(vlnd_x.png^[resize:13x13^[mask:{vlnd_circle.png^[resize:13x13}^[multiply:#000000)}:1,7={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "((16))\\/"));
     end);
 end);
