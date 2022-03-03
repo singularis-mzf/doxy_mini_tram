@@ -189,32 +189,31 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
         height = block.size.height * sr_scale;
     };
 
-    -- Calculate text position and size in block coordinates.
+    -- Calculate text position and size in block coordinates,
+    -- and keep text centered if the block is enlarged by the layouter.
     local block_text_position = {
-        x = (block.block.required_size.width - block.block.text_size.width) * 0.5;
-        y = (block.block.required_size.height - block.block.text_size.height) * 0.5;
+        x = (block.size.width - block.block.text_size.width * block.scale) * 0.5;
+        y = (block.size.height - block.block.text_size.height * block.scale) * 0.5;
     };
 
     -- Calculate text position and size in layout coordinates.
-    -- Rounding is done in layout coordinates,
-    -- i. e. superresolution does not lead to higher placement resolution.
     local layout_text_position = {
-        x = math.floor(block.position.x + block_text_position.x * block.scale);
-        y = math.floor(block.position.y + block_text_position.y * block.scale);
+        x = block.position.x + block_text_position.x;
+        y = block.position.y + block_text_position.y;
     };
     local layout_text_size = {
-        width = math.ceil(block.block.text_size.width * block.scale);
-        height = math.ceil(block.block.text_size.height * block.scale);
+        width = block.block.text_size.width * block.scale;
+        height = block.block.text_size.height * block.scale;
     };
 
     -- Calculate text position and size in superresolution coordinates.
     local text_position = {
-        x = layout_text_position.x * sr_scale;
-        y = layout_text_position.y * sr_scale;
+        x = math.floor(layout_text_position.x * sr_scale);
+        y = math.floor(layout_text_position.y * sr_scale);
     };
     local text_size = {
-        width = layout_text_size.width * sr_scale;
-        height = layout_text_size.height * sr_scale;
+        width = math.ceil(layout_text_size.width * sr_scale);
+        height = math.ceil(layout_text_size.height * sr_scale);
     };
 
     -- Render background
