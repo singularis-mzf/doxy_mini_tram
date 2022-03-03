@@ -243,6 +243,8 @@ function visual_line_number_displays.parse_color_string(input)
 end
 
 local color_brace_sequences = {
+    a = "all";
+    all = "all";
     t = "text";
     text = "text";
     b = "background";
@@ -292,7 +294,32 @@ function visual_line_number_displays.parse_color_brace_sequence(text, colors, of
     end
 
     local value = string.sub(sequence, colon_pos + 1);
-    if value == "" then
+    if (which == "all") and (value ~= "") then
+        -- Apply full color scheme of a line.
+        local new_colors;
+        if string.sub(value, 1, 1) == '"' and string.sub(value, -1) == '"' then
+            -- Fetch color scheme for string.
+            new_colors = visual_line_number_displays.colors_for_line(string.sub(value, 2, -2));
+        else
+            -- Fetch color scheme for integer.
+            value = tonumber(value);
+            if not value then
+                -- Invalid color sequence. Try next one.
+                return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
+            end
+            new_colors = visual_line_number_displays.colors_for_line(value);
+        end
+        if not new_colors then
+            -- Invalid color sequence. Try next one.
+            return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
+        end
+
+        for k, v in pairs(new_colors) do
+            colors[k] = v;
+        end
+
+        return start_pos, end_pos;
+    elseif value == "" then
         -- Clear explicit color.
         colors[which .. "_explicit"] = false;
         return start_pos, end_pos;

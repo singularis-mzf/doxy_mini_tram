@@ -79,6 +79,7 @@ function visual_line_number_displays.parse_display_string(input)
     end
 
     visual_line_number_displays.colorize_blocks(number_blocks, colors);
+    local background_color = visual_line_number_displays.shade_background_color(colors.background);
     visual_line_number_displays.colorize_blocks(text_blocks, colors);
     visual_line_number_displays.colorize_blocks(details_blocks, colors);
 
@@ -89,8 +90,6 @@ function visual_line_number_displays.parse_display_string(input)
     visual_line_number_displays.calculate_block_sizes(number_blocks);
     visual_line_number_displays.calculate_block_sizes(text_blocks);
     visual_line_number_displays.calculate_block_sizes(details_blocks);
-
-    local background_color = visual_line_number_displays.shade_background_color(colors.background);
 
     return number_blocks, text_blocks, details_blocks, background_color;
 end

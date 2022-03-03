@@ -144,7 +144,7 @@ describe("colorize_block()", function()
     it("splits shapeless blocks 1", function()
         local block = t("A{b:#1e00ff}B");
 
-        local reference = {}
+        local reference = {};
         reference[1] = line_1_colorize(t("A"));
         reference[1].background_color = "#1c00ff";
         reference[2] = line_1_colorize(t("B"));
@@ -163,7 +163,7 @@ describe("colorize_block()", function()
     it("splits shapeless blocks 2", function()
         local block = t("{b:#1e00ff}B");
 
-        local reference = {}
+        local reference = {};
         reference[1] = line_1_colorize(t("B"));
 
         local colors = line_1_colors();
@@ -180,7 +180,7 @@ describe("colorize_block()", function()
     it("processes multiple color sequences 1", function()
         local block = t("{b:#1e00ff}B{b:#1a00ff}C");
 
-        local reference = {}
+        local reference = {};
         reference[1] = line_1_colorize(t("B"));
         reference[2] = line_1_colorize(t("C"));
         reference[2].background_color = "#1a00ff";
@@ -200,7 +200,7 @@ describe("colorize_block()", function()
     it("processes multiple color sequences 2", function()
         local block = t("{b:#1e00ff}{b:#1a00ff}C");
 
-        local reference = {}
+        local reference = {};
         reference[1] = line_1_colorize(t("C"));
         reference[1].background_color = "#1a00ff";
 
@@ -216,10 +216,10 @@ describe("colorize_block()", function()
         assert.same(colors_leftover_reference, colors);
     end);
 
-    it("processes references to line numbers", function()
+    it("processes references to line numbers 1", function()
         local block = t('{t:"4"}');
 
-        local reference = {}
+        local reference = {};
 
         local colors = line_1_colors();
 
@@ -229,10 +229,24 @@ describe("colorize_block()", function()
         assert.same("#007f00", colors.text);
     end);
 
+    it("processes references to line numbers 2", function()
+        local block = t('{all:6}');
+
+        local reference = {};
+
+        local colors = line_1_colors();
+
+        local split_blocks = cb(block, colors);
+
+        assert.same(reference, split_blocks);
+        assert.same("#ffff00", colors.background);
+        assert.same("#000000", colors.text);
+    end);
+
     it("clears explicit colors", function()
         local block = t('{t:}');
 
-        local reference = {}
+        local reference = {};
 
         local colors = line_1_colors();
 
