@@ -170,6 +170,61 @@ function visual_line_number_displays.render_block_background(size, shape, patter
     end
 end
 
+--! Makes texture strings for background and foreground features @p features.
+--!
+--! @param size Table with elements @p width and @p height.
+--! @param features Table with elements indicating which features to paint.
+--! @param color Feature color string.
+--!
+--! @returns background_features, foreground_features as standalone texture strings.
+function visual_line_number_displays.render_block_features(size, features, color)
+    local background = {};
+    local foreground = {};
+
+    -- Collect features.
+    if features.stroke_background then
+        table.insert(background, "vlnd_stroke.png");
+    end
+    if features.stroke_foreground then
+        table.insert(foreground, "vlnd_stroke.png");
+    end
+    if features.stroke_13_background then
+        table.insert(background, "vlnd_stroke_13.png");
+    end
+    if features.stroke_13_foreground then
+        table.insert(foreground, "vlnd_stroke_13.png");
+    end
+    if features.stroke_24_background then
+        table.insert(background, "vlnd_stroke_24.png");
+    end
+    if features.stroke_24_foreground then
+        table.insert(foreground, "vlnd_stroke_24.png");
+    end
+
+    background = table.concat(background, "^");
+    foreground = table.concat(foreground, "^");
+
+    -- Resize to requested size.
+    local resize = string.format("^[resize:%ix%i", size.width, size.height);
+
+    if background ~= "" then
+        background = background .. resize;
+    end
+    if foreground ~= "" then
+        foreground = foreground .. resize;
+    end
+
+    -- Colorize
+    if (color ~= "#ffffff") and (background ~= "") then
+        background = background .. "^[multiply:" .. color;
+    end
+    if (color ~= "#ffffff") and (foreground ~= "") then
+        foreground = foreground .. "^[multiply:" .. color;
+    end
+
+    return background, foreground;
+end
+
 --! Makes a texture string depicting @p block.
 --!
 --! Result needs to be added to a @c combine modifier.
@@ -211,6 +266,7 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
         x = math.floor(layout_text_position.x * sr_scale);
         y = math.floor(layout_text_position.y * sr_scale);
     };
+    local text_placement = string.format(":%i,%i=", text_position.x, text_position.y);
     local text_size = {
         width = math.ceil(layout_text_size.width * sr_scale);
         height = math.ceil(layout_text_size.height * sr_scale);
@@ -223,6 +279,16 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
 
         b = visual_line_number_displays.texture_escape(b);
         background_texture = string.format(":%i,%i=", block_position.x, block_position.y) .. b;
+    end
+
+    -- Render features
+    local background_features, foreground_features = visual_line_number_displays.render_block_features(text_size, block.block.features, block.block.feature_color);
+
+    if background_features ~= "" then
+        background_features = text_placement .. visual_line_number_displays.texture_escape(background_features);
+    end
+    if foreground_features ~= "" then
+        foreground_features = text_placement .. visual_line_number_displays.texture_escape(foreground_features);
     end
 
     -- Render text.
@@ -243,9 +309,9 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
 
     text_texture = visual_line_number_displays.texture_escape(text_texture);
 
-    text_texture = string.format(":%i,%i=", text_position.x, text_position.y) .. text_texture;
+    text_texture = text_placement .. text_texture;
 
-    return background_texture .. text_texture;
+    return background_texture .. background_features .. text_texture .. foreground_features;
 end
 
 --! Makes a texture string depicting @p layout.

@@ -97,6 +97,7 @@ describe("render_text_block()", function()
                 text = "A";
                 required_size = { width = 5, height = 8 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 1;
             position = { x = 0, y = 1 };
@@ -112,6 +113,7 @@ describe("render_text_block()", function()
                 text = "A";
                 required_size = { width = 5, height = 8 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 1;
             position = { x = 0, y = 1 };
@@ -127,6 +129,7 @@ describe("render_text_block()", function()
                 text = "A";
                 required_size = { width = 5, height = 8 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 0.5;
             position = { x = 1, y = 2 };
@@ -142,6 +145,7 @@ describe("render_text_block()", function()
                 text = "A";
                 required_size = { width = 9, height = 16 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 1;
             position = { x = 0, y = 1 };
@@ -157,6 +161,7 @@ describe("render_text_block()", function()
                 text = "A";
                 required_size = { width = 9, height = 16 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 0.375;
             position = { x = 15, y = 4 };
@@ -173,6 +178,7 @@ describe("render_text_block()", function()
                 required_size = { width = 5, height = 8 };
                 text_size = { width = 5, height = 8 };
                 text_color = "#00ff00";
+                features = {};
             };
             scale = 1;
             position = { x = 0, y = 1 };
@@ -180,6 +186,27 @@ describe("render_text_block()", function()
         };
 
         assert.same(":0,1={[combine:5x8:0,0=A.png^[colorize:#00ff00}", rtb(block, 1));
+    end);
+
+    it("renders text block with features", function()
+        local block = {
+            block = {
+                text = "A";
+                features = {
+                    stroke_background = true;
+                    stroke_13_foreground = true;
+                };
+                required_size = { width = 5, height = 8 };
+                text_size = { width = 5, height = 8 };
+                text_color = "#000000";
+                feature_color = "#ff0000";
+            };
+            scale = 1;
+            position = { x = 0, y = 1 };
+            size = { width = 5, height = 8 };
+        };
+
+        assert.same(":0,1={vlnd_stroke.png^[resize:5x8^[multiply:#ff0000}:0,1={[combine:5x8:0,0=A.png}:0,1={vlnd_stroke_13.png^[resize:5x8^[multiply:#ff0000}", rtb(block, 1));
     end);
 end);
 
@@ -192,6 +219,7 @@ describe("render_layout()", function()
                 text = "A";
                 required_size = { width = 9, height = 16 };
                 text_size = { width = 5, height = 8 };
+                features = {};
             };
             scale = 0.375;
             position = { x = 15, y = 4 };
@@ -204,6 +232,7 @@ describe("render_layout()", function()
                 required_size = { width = 5, height = 8 };
                 text_size = { width = 5, height = 8 };
                 text_color = "#00ff00";
+                features = {};
             };
             scale = 1;
             position = { x = 0, y = 1 };
