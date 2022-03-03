@@ -102,6 +102,12 @@ function visual_line_number_displays.render_background_pattern(size, pattern, al
     error("Invalid background pattern: " .. pattern);
 end
 
+local outlined_shapes = {
+    square_outlined = "square";
+    round_outlined = "round";
+    diamond_outlined = "diamond";
+};
+
 --! Renders a text block background including shape and pattern.
 --!
 --! @param size Table with elements @p width and @p height.
@@ -109,9 +115,37 @@ end
 --! @param pattern Name of the background pattern or nil.
 --! @param color_1 Primary background color string.
 --! @param color_2 Secondary background color string, used for patterns.
+--! @param outline_width Width of outline.
+--! @param outline_color Outline color string..
 --!
 --! @returns Standalone texture string.
-function visual_line_number_displays.render_block_background(size, shape, pattern, color_1, color_2)
+function visual_line_number_displays.render_block_background(size, shape, pattern, color_1, color_2, outline_width, outline_color)
+    if outlined_shapes[shape] then
+        -- Handle outlined shapes by calling this function itself
+        -- for outline shape and inner shape, and combining the results.
+        local combine = string.format("[combine:%ix%i:0,0=", size.width, size.height);
+
+        local outline_height = outline_width;
+        if shape == "diamond_outlined" then
+            -- Adjust to diamond aspect ratio.
+            outline_width = math.ceil(outline_width * size.width / size.height);
+        end
+
+        local inner_size = {
+            width = size.width - 2 * outline_width;
+            height = size.height - 2 * outline_height;
+        };
+        local inner_placement = string.format(":%i,%i=", outline_width, outline_height);
+
+        local outline = visual_line_number_displays.render_block_background(size, outlined_shapes[shape], nil, outline_color);
+        local inner = visual_line_number_displays.render_block_background(inner_size, outlined_shapes[shape], pattern, color_1, color_2);
+
+        outline = visual_line_number_displays.texture_escape(outline);
+        inner = visual_line_number_displays.texture_escape(inner);
+
+        return combine .. outline .. inner_placement .. inner;
+    end
+
     if not pattern then
         local texture = visual_line_number_displays.render_background_shape(size, shape);
 
@@ -266,7 +300,9 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
         x = math.floor(layout_text_position.x * sr_scale);
         y = math.floor(layout_text_position.y * sr_scale);
     };
-    local text_placement = string.format(":%i,%i=", text_position.x, text_position.y);
+    local feature_placement = string.format(":%i,%i=", text_position.x, text_position.y);
+    -- Metro font is consistently one pixel left of where it should be.
+    local text_placement = string.format(":%i,%i=", text_position.x + math.floor(block.scale * sr_scale), text_position.y);
     local text_size = {
         width = math.ceil(layout_text_size.width * sr_scale);
         height = math.ceil(layout_text_size.height * sr_scale);
@@ -275,7 +311,8 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
     -- Render background
     local background_texture = "";
     if block.block.background_shape then
-        local b = visual_line_number_displays.render_block_background(block_size, block.block.background_shape, block.block.background_pattern, block.block.background_color, block.block.secondary_background_color);
+        local outline_width = math.ceil(1.4 * sr_scale * block.scale);
+        local b = visual_line_number_displays.render_block_background(block_size, block.block.background_shape, block.block.background_pattern, block.block.background_color, block.block.secondary_background_color, outline_width, block.block.text_color);
 
         b = visual_line_number_displays.texture_escape(b);
         background_texture = string.format(":%i,%i=", block_position.x, block_position.y) .. b;
@@ -285,10 +322,10 @@ function visual_line_number_displays.render_text_block(block, sr_scale)
     local background_features, foreground_features = visual_line_number_displays.render_block_features(text_size, block.block.features, block.block.feature_color);
 
     if background_features ~= "" then
-        background_features = text_placement .. visual_line_number_displays.texture_escape(background_features);
+        background_features = feature_placement .. visual_line_number_displays.texture_escape(background_features);
     end
     if foreground_features ~= "" then
-        foreground_features = text_placement .. visual_line_number_displays.texture_escape(foreground_features);
+        foreground_features = feature_placement .. visual_line_number_displays.texture_escape(foreground_features);
     end
 
     -- Render text.

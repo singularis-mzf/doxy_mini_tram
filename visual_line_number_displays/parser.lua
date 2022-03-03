@@ -336,6 +336,9 @@ function visual_line_number_displays.parse_text_block_string(input)
         ["[["] = "square";
         ["(("] = "round";
         ["<<"] = "diamond";
+        ["_["] = "square_outlined";
+        ["_("] = "round_outlined";
+        ["_<"] = "diamond_outlined";
     };
 
     -- Tries to parse a background block start character.
@@ -410,6 +413,9 @@ function visual_line_number_displays.parse_text_block_string(input)
         ["]]"] = "square";
         ["))"] = "round";
         [">>"] = "diamond";
+        ["]_"] = "square_outlined";
+        [")_"] = "round_outlined";
+        [">_"] = "diamond_outlined";
     };
 
     -- Tries to parse a background block end character.
@@ -460,16 +466,20 @@ function visual_line_number_displays.parse_text_block_string(input)
         return false;
     end
 
+    -- These lists show the left character of background block bracket pairs.
     local opening_brackets = {
         ["["] = true;
         ["("] = true;
         ["<"] = true;
+        ["_"] = true;
     };
-
     local closing_brackets = {
         square = "]";
         round = ")";
         diamond = ">";
+        square_outlined = "]";
+        round_outlined = ")";
+        diamond_outlined = ">";
     };
 
     -- Parses a character as plain text.
@@ -486,7 +496,7 @@ function visual_line_number_displays.parse_text_block_string(input)
             -- the part of text_after before this bracket is actual text.
             for pos, c in utf_8_characters(text_after) do
                 if opening_brackets[c] then
-                    current_text = current_text .. string.sub(text_after, 1, pos);
+                    current_block.text = current_block.text .. string.sub(text_after, 1, pos);
                     text_after = string.sub(text_after, pos + 1);
                     break;
                 end

@@ -124,6 +124,9 @@ describe("parse_text_block_string()", function()
         assert.same({{ text = "A", background_shape = "square" }}, ptbs("[[A]]"));
         assert.same({{ text = "abc", background_shape = "round" }}, ptbs("((abc))"));
         assert.same({{ text = "First\nSecond", background_shape = "diamond" }}, ptbs("<<First\nSecond>>"));
+        assert.same({{ text = "A", background_shape = "square_outlined" }}, ptbs("_[A]_"));
+        assert.same({{ text = "abc", background_shape = "round_outlined" }}, ptbs("_(abc)_"));
+        assert.same({{ text = "First\nSecond", background_shape = "diamond_outlined" }}, ptbs("_<First\nSecond>_"));
     end);
 
     it("preserves emptyness in shaped blocks", function()
@@ -228,13 +231,13 @@ describe("parse_text_block_string()", function()
         assert.same({
                 {
                     text = "A";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                 };
                 {
                     text = "B";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                 };
-            }, ptbs("[[A]][[B]]"));
+            }, ptbs("_[A]__[B]_"));
         assert.same({
                 {
                     text = "abc";
@@ -244,6 +247,15 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                 };
             }, ptbs("abc[[ABC]]"));
+        assert.same({
+                {
+                    text = "abc";
+                };
+                {
+                    text = "ABC";
+                    background_shape = "square_outlined";
+                };
+            }, ptbs("abc_[ABC]_"));
     end);
 
     it("assigns background patterns preferably to the left block", function()
@@ -266,9 +278,9 @@ describe("parse_text_block_string()", function()
                 };
                 {
                     text = "B";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                 };
-            }, ptbs("[[A]]/[[B]]"));
+            }, ptbs("[[A]]/_[B]_"));
         assert.same({
                 {
                     text = "abc";
@@ -284,13 +296,13 @@ describe("parse_text_block_string()", function()
         assert.same({
                 {
                     text = "ABC";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                     background_pattern = "right";
                 };
                 {
                     text = "abc";
                 };
-            }, ptbs("[[ABC]]|abc"));
+            }, ptbs("_[ABC]_|abc"));
     end);
 
     it("distributes features and background patterns", function()
@@ -317,10 +329,10 @@ describe("parse_text_block_string()", function()
                 };
                 {
                     text = "B";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                     background_pattern = "diag_3";
                 };
-            }, ptbs("A/ | \\[[B]]"));
+            }, ptbs("A/ | \\_[B]_"));
         assert.same({
                 {
                     text = "A";
@@ -334,7 +346,7 @@ describe("parse_text_block_string()", function()
         assert.same({
                 {
                     text = "A";
-                    background_shape = "square";
+                    background_shape = "square_outlined";
                     background_pattern = "lower";
                 };
                 {
@@ -342,7 +354,7 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                     background_pattern = "left";
                 };
-            }, ptbs("[[A]]- |[[B]]"));
+            }, ptbs("_[A]_- |[[B]]"));
     end);
 
     it("uses only the first background shape", function()
@@ -352,6 +364,15 @@ describe("parse_text_block_string()", function()
                     background_shape = "square";
                 };
             }, ptbs("[[[A]]"));
+        assert.same({
+                {
+                    text = "_";
+                };
+                {
+                    text = "A";
+                    background_shape = "square_outlined";
+                };
+            }, ptbs("__[A]_"));
         assert.same({
                 {
                     text = "<<A";
@@ -390,13 +411,10 @@ describe("parse_text_block_string()", function()
             }, ptbs("<< [[ A >> ]]"));
         assert.same({
                 {
-                    text = "[A";
-                    background_shape = "square";
+                    text = "[A]";
+                    background_shape = "square_outlined";
                 };
-                {
-                    text = "]";
-                };
-            }, ptbs("[[[A]]]"));
+            }, ptbs("_[[A]]_"));
         assert.same({
                 {
                     text = "[[A";

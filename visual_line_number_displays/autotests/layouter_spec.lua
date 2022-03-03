@@ -58,9 +58,9 @@ describe("calculate_block_size()", function()
     it("calculates size of round and diamond blocks", function()
         -- These tests are prone to fail after minor adjustments.
         -- Adjust reference values as needed and appropriate.
-        assert.same(wh(2, 2), cbs(t("", "round")).required_size);
+        assert.same(wh(3, 3), cbs(t("", "round")).required_size);
         assert.same(wh(3, 3), cbs(t("", "diamond")).required_size);
-        assert.same(wh(10, 10), cbs(t("A", "round")).required_size);
+        assert.same(wh(12, 12), cbs(t("A", "round")).required_size);
         assert.same(wh(13, 13), cbs(t("A", "diamond")).required_size);
         assert.same(wh(39, 12), cbs(t("123 456", "round")).required_size);
         assert.same(wh(59, 16), cbs(t("123 456", "diamond")).required_size);

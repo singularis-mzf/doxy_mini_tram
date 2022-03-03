@@ -86,6 +86,10 @@ describe("render_block_background()", function()
     it("renders non-square backgrounds with inverted pattern", function()
         assert.same("vlnd_diamond.png^[resize:15x12^[multiply:#abcdef^(vlnd_x.png^[resize:15x12^[mask:{vlnd_diamond.png^[resize:15x12}^[multiply:#123456)", rbb(s(15, 12), "diamond", "x_left", "#123456", "#abcdef"));
     end);
+
+    it("renders outlined background", function()
+        assert.same("[combine:10x10:0,0={vlnd_pixel.png^[resize:10x10^[multiply:#123456}:2,2={vlnd_pixel.png^[resize:6x6}", rbb(s(10, 10), "square_outlined", nil, "#ffffff", "#abcdef", 2, "#123456"));
+    end);
 end);
 
 describe("render_text_block()", function()
@@ -104,7 +108,7 @@ describe("render_text_block()", function()
             size = { width = 5, height = 8 };
         };
 
-        assert.same(":0,1={[combine:5x8:0,0=A.png}", rtb(block, 1));
+        assert.same(":1,1={[combine:5x8:0,0=A.png}", rtb(block, 1));
     end);
 
     it("renders superresolution text blocks", function()
@@ -120,7 +124,7 @@ describe("render_text_block()", function()
             size = { width = 5, height = 8 };
         };
 
-        assert.same(":0,2={[combine:5x8:0,0=A.png^[resize:10x16}", rtb(block, 2));
+        assert.same(":2,2={[combine:5x8:0,0=A.png^[resize:10x16}", rtb(block, 2));
     end);
 
     it("renders scaled text blocks", function()
@@ -136,7 +140,7 @@ describe("render_text_block()", function()
             size = { width = 3, height = 4 };
         };
 
-        assert.same(":2,4={[combine:5x8:0,0=A.png}", rtb(block, 2));
+        assert.same(":3,4={[combine:5x8:0,0=A.png}", rtb(block, 2));
     end);
 
     it("renders deplaced text blocks", function()
@@ -152,7 +156,7 @@ describe("render_text_block()", function()
             size = { width = 9, height = 16 };
         };
 
-        assert.same(":2,5={[combine:5x8:0,0=A.png}", rtb(block, 1));
+        assert.same(":3,5={[combine:5x8:0,0=A.png}", rtb(block, 1));
     end);
 
     it("renders deplaced scaled text blocks in superresolution", function()
@@ -185,7 +189,7 @@ describe("render_text_block()", function()
             size = { width = 5, height = 8 };
         };
 
-        assert.same(":0,1={[combine:5x8:0,0=A.png^[colorize:#00ff00}", rtb(block, 1));
+        assert.same(":1,1={[combine:5x8:0,0=A.png^[colorize:#00ff00}", rtb(block, 1));
     end);
 
     it("renders text block with features", function()
@@ -206,7 +210,7 @@ describe("render_text_block()", function()
             size = { width = 5, height = 8 };
         };
 
-        assert.same(":0,1={vlnd_stroke.png^[resize:5x8^[multiply:#ff0000}:0,1={[combine:5x8:0,0=A.png}:0,1={vlnd_stroke_13.png^[resize:5x8^[multiply:#ff0000}", rtb(block, 1));
+        assert.same(":0,1={vlnd_stroke.png^[resize:5x8^[multiply:#ff0000}:1,1={[combine:5x8:0,0=A.png}:0,1={vlnd_stroke_13.png^[resize:5x8^[multiply:#ff0000}", rtb(block, 1));
     end);
 end);
 
@@ -243,6 +247,6 @@ describe("render_layout()", function()
         layout.number_section = number_section;
         layout.details_section = details_section;
 
-        assert.same("vlnd_pixel.png^[multiply:#000000^[resize:48x40^[combine:48x40:37,21={[combine:5x8:0,0=A.png^[resize:4x6}:0,2={[combine:5x8:0,0=A.png^[colorize:#00ff00^[resize:10x16}", rl(layout, 20, 2, "#000000"));
+        assert.same("vlnd_pixel.png^[multiply:#000000^[resize:48x40^[combine:48x40:37,21={[combine:5x8:0,0=A.png^[resize:4x6}:2,2={[combine:5x8:0,0=A.png^[colorize:#00ff00^[resize:10x16}", rl(layout, 20, 2, "#000000"));
     end);
 end);

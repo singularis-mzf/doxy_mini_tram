@@ -9,6 +9,12 @@ local function ld(x)
     return math.log(x) * ln_2_;
 end
 
+local outlined_shapes = {
+    square_outlined = "square";
+    round_outlined = "round";
+    diamond_outlined = "diamond";
+};
+
 --! Calculates the necessary bounding box for @p block at 1:1 scale.
 --!
 --! Includes multi-line text and background shapes.
@@ -28,13 +34,15 @@ function visual_line_number_displays.calculate_block_size(block)
     local required_width = width;
     local required_height = height;
 
-    if block.background_shape == "square" then
+    local inner_shape = outlined_shapes[block.background_shape] or block.background_shape;
+
+    if inner_shape == "square" then
         required_width = width + 4;
         required_height = height + 4;
-    elseif block.background_shape == "round" then
+    elseif inner_shape == "round" then
         if width <= (height * 2) then
             -- Make a circle at least as wide as high.
-            local wh = math.ceil((width + height + 3) * 0.6);
+            local wh = math.ceil(math.max(((width + height + 3) * 0.75), width * 0.3 + height));
             required_width = wh;
             required_height = wh;
         else
@@ -43,7 +51,7 @@ function visual_line_number_displays.calculate_block_size(block)
             required_width = width + 2 + wh;
             required_height = height + 2 + wh;
         end
-    elseif block.background_shape == "diamond" then
+    elseif inner_shape == "diamond" then
         if width <= (height * 2) then
             -- Make the diamond at least as wide as high.
             local wh = math.ceil((width + height + 3) * 0.8);
@@ -54,6 +62,11 @@ function visual_line_number_displays.calculate_block_size(block)
             required_width = math.ceil((width + 1.5) * 1.6);
             required_height = math.ceil((height + 1.5) * 1.6);
         end
+    end
+
+    if outlined_shapes[block.background_shape] then
+        required_width = required_width + 4;
+        required_height = required_height + 4;
     end
 
     return {
@@ -260,7 +273,8 @@ end
 --! Blocks are not repositioned, so you need to call align() afterwards.
 function visual_line_number_displays.blocks_layout:stretch_height(max_height)
     for _, block in ipairs(self) do
-        if block.block.background_shape then
+        local shape = block.block.background_shape;
+        if shape and (shape ~= "square_outlined") then
             block.size.height = math.min(max_height, math.max(block.size.width, block.size.height));
         end
     end
