@@ -44,7 +44,7 @@ visual_line_number_displays.line_colors = {};
 --! @param line A string or an integer, identifying the train line.
 --! @param current_state A color_state table containing previous color definitions.
 function visual_line_number_displays.colors_for_line(line, current_state)
-    local preset = visual_line_number_displays.line_colors[line] or visual_line_number_displays.fixed_line_colors[line];
+    local preset = visual_line_number_displays.line_colors[line] or visual_line_number_displays.fixed_line_colors[line] or visual_line_number_displays.subway_algorithm(line);
     if not preset then
         return nil;
     end

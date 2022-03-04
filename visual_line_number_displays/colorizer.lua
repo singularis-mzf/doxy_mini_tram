@@ -15,6 +15,20 @@ visual_line_number_displays.fixed_line_colors = {
     [9] = "#00c0b1";
 };
 
+--! Returns a color string for line number @p number (integer),
+--! calculated with the subway wagon’s line color algorithm.
+function visual_line_number_displays.subway_algorithm(number)
+    if type(number) ~= "number" then
+        return nil;
+    end
+
+    local r = math.floor(math.fmod(number * 67 + 101, 255));
+    local g = math.floor(math.fmod(number * 97 + 109, 255));
+    local b = math.floor(math.fmod(number * 73 + 127, 255));
+
+    return string.format("#%02x%02x%02x", r, g, b);
+end
+
 --! Returns integers @c r, @c g, @c b for an input string of format @c #rrggbb.
 local function rgb(color_string)
     local r = tonumber(string.sub(color_string, 2, 3), 16);
