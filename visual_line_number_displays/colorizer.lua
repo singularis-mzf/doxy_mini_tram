@@ -3,15 +3,15 @@
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
 
 visual_line_number_displays.fixed_line_colors = {
-    [0] = "#000000";
-    [1] = "#1e00ff";
-    [2] = "#ff001e";
-    [3] = "#7f007f";
-    [4] = "#007f00";
+    [0] = { background = "#000000", feature = "#ff2222" };
+    [1] = { background = "#1e00ff", feature = "#ff2222" };
+    [2] = { background = "#ff001e", feature = "#000000" };
+    [3] = { background = "#7f007f", feature = "#ff2222" };
+    [4] = { background = "#007f00", feature = "#ff2222" };
     [5] = "#ffa400";
     [6] = "#ffff00";
-    [7] = "#797979";
-    [8] = "#ff1ed0";
+    [7] = { background = "#797979", feature = "#ff2222" };
+    [8] = { background = "#ff1ed0", feature = "#ff8800" };
     [9] = "#00c0b1";
 };
 
