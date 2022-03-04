@@ -599,6 +599,38 @@ describe("parse_entities_in_blocks()", function()
         assert.same({t("\n ")}, peb({t("{newline}{space}")}));
     end);
 
+    -- For convenience of the person doing the test,
+    -- some UTF-8 strings will be compared as byte lists.
+    local function bytes(text_or_block)
+        local text = text_or_block;
+        if type(text_or_block) == "table" then
+            text = text_or_block[1].text;
+        end
+
+        local bytes = {};
+        for i = 1, #text do
+            table.insert(bytes, string.format("0x%02x", string.byte(string.sub(text, i, i))));
+        end
+        return bytes;
+    end
+
+    describe("bytes() helper function", function()
+        assert.same({ "0x20", "0x7f" }, bytes(" \127"));
+    end);
+
+    it("Replaces numeric entities", function()
+        assert.same({t(" ")}, peb({t("{#x20}")}));
+        assert.same({t(" ")}, peb({t("{#32}")}));
+        assert.same({t("\0")}, peb({t("{#0}")}));
+        assert.same({t("\127")}, peb({t("{#127}")}));
+        assert.same(bytes("\194\128"), bytes(peb({t("{#128}")})));
+        assert.same(bytes("±"), bytes(peb({t("{#xb1}")})));
+        assert.same(bytes("ł"), bytes(peb({t("{#x142}")})));
+        assert.same(bytes("❶"), bytes(peb({t("{#x2776}")})));
+        assert.same(bytes("𠃑"), bytes(peb({t("{#x200d1}")})));
+        assert.same(bytes("{#}"), bytes(peb({t("{#}")})));
+    end);
+
     it("Preserves text", function()
         assert.same({t("")}, peb({t("")}));
         assert.same({t("lbrak}")}, peb({t("lbrak}")}));

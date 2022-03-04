@@ -576,11 +576,6 @@ function visual_line_number_displays.parse_text_block_string(input)
     return result;
 end
 
---! Returns the string value of the entity @p entity (without braces) or nil.
-function visual_line_number_displays.entity_value(entity)
-    return visual_line_number_displays.basic_entities[entity];
-end
-
 --! Parses space sequences in @p blocks, modifying blocks in-place.
 --! @p blocks is a list of text_block_description tables.
 function visual_line_number_displays.parse_line_breaks_in_blocks(blocks)
@@ -598,6 +593,90 @@ function visual_line_number_displays.parse_line_breaks_in_blocks(blocks)
             end
 
             text = string.sub(text, 1, pos - 1) .. "\n" .. string.sub(text, pos + 2);
+        end
+
+        block.text = text;
+    end
+end
+
+local byte_2_pos = 1 / 0x40;
+local byte_3_pos = 1 / 0x1000;
+local byte_4_pos = 1 / 0x40000;
+
+--! Returns the string value of the entity @p entity (without braces) or nil.
+function visual_line_number_displays.entity_value(entity)
+    if string.sub(entity, 1, 1) == "#" then
+        -- Parse as HTML-like codepoint entity.
+        local codepoint;
+        if string.sub(entity, 2, 2) == "x" then
+            codepoint = tonumber(string.sub(entity, 3), 16);
+        else
+            codepoint = tonumber(string.sub(entity, 2), 10);
+        end
+        if not codepoint then
+            return nil;
+        end
+
+        -- Split in UTF-8 bytes.
+        local bytes = {};
+        if codepoint <= 0x7f then
+            bytes[1] = codepoint;
+        elseif codepoint <= 0x7ff then
+            bytes[1] = 0xc0 + math.floor(codepoint * byte_2_pos);
+            bytes[2] = 0x80 + codepoint % 0x40;
+        elseif codepoint <= 0xffff then
+            bytes[1] = 0xe0 + math.floor(codepoint * byte_3_pos);
+            bytes[2] = 0x80 + math.floor(codepoint * byte_2_pos) % 0x40;
+            bytes[3] = 0x80 + codepoint % 0x40;
+        elseif codepoint <= 0x10ffff then
+            bytes[1] = 0xf0 + math.floor(codepoint * byte_4_pos);
+            bytes[2] = 0x80 + math.floor(codepoint * byte_3_pos) % 0x40;
+            bytes[3] = 0x80 + math.floor(codepoint * byte_2_pos) % 0x40;
+            bytes[4] = 0x80 + codepoint % 0x40;
+        end
+
+        -- Create a Lua string.
+        -- table.unpack() is too new for Minetest.
+        local result = "";
+        for _, b in ipairs(bytes) do
+            result = result .. string.char(b);
+        end
+        return result;
+    else
+        return visual_line_number_displays.basic_entities[entity];
+    end
+end
+
+--! Parses entity brace sequences in @p blocks, modifying blocks in-place.
+--! @p blocks is a list of text_block_description tables.
+function visual_line_number_displays.parse_entities_in_blocks(blocks)
+    -- UTF-8 parsing is not necessary here,
+    -- because everything relevant is only 7 bit.
+
+    for _, block in ipairs(blocks) do
+        local pos = 1;
+        local text = block.text
+
+        while pos < #text do
+            pos = string.find(text, "{", pos, --[[ plain ]] true);
+            if not pos then
+                break;
+            end
+
+            local closing = string.find(text, "}", pos + 1, --[[ plain ]] true);
+            if not closing then
+                break;
+            end
+
+            local entity = string.sub(text, pos + 1, closing - 1);
+            local value = visual_line_number_displays.entity_value(entity);
+
+            if value then
+                text = string.sub(text, 1, pos - 1) .. value .. string.sub(text, closing + 1);
+                pos = pos + #value;
+            else
+                pos = closing + 1;
+            end
         end
 
         block.text = text;
@@ -684,40 +763,4 @@ function visual_line_number_displays.parse_macros(input)
     end
 
     return result, expanded_anything;
-end
-
---! Parses entity brace sequences in @p blocks, modifying blocks in-place.
---! @p blocks is a list of text_block_description tables.
-function visual_line_number_displays.parse_entities_in_blocks(blocks)
-    -- UTF-8 parsing is not necessary here,
-    -- because everything relevant is only 7 bit.
-
-    for _, block in ipairs(blocks) do
-        local pos = 1;
-        local text = block.text
-
-        while pos < #text do
-            pos = string.find(text, "{", pos, --[[ plain ]] true);
-            if not pos then
-                break;
-            end
-
-            local closing = string.find(text, "}", pos + 1, --[[ plain ]] true);
-            if not closing then
-                break;
-            end
-
-            local entity = string.sub(text, pos + 1, closing - 1);
-            local value = visual_line_number_displays.entity_value(entity);
-
-            if value then
-                text = string.sub(text, 1, pos - 1) .. value .. string.sub(text, closing + 1);
-                pos = pos + #value;
-            else
-                pos = closing + 1;
-            end
-        end
-
-        block.text = text;
-    end
 end
