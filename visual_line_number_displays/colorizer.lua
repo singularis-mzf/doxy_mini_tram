@@ -67,42 +67,43 @@ end
 local implicit_color_pool = {
     -- Desaturated colors for text.
     text = {
-        "#000000";
-        "#ffffff";
-        "#ff2222";
-        "#22ff22";
-        "#2222ff";
-        "#55aaaa";
-        "#aa55aa";
-        "#aaaa55";
+        { "#000000", 1.0 };
+        { "#ffffff", 1.0 };
+        { "#ff2222", 0.8 };
+        { "#22ff22", 0.8 };
+        { "#2222ff", 0.8 };
+        { "#55aaaa", 0.6 };
+        { "#aa55aa", 0.6 };
+        { "#aaaa55", 0.6 };
     };
     -- Saturated colors for background.
     background = {
-        "#ff0000";
-        "#00ff00";
-        "#0000ff";
-        "#00ffff";
-        "#ff00ff";
-        "#ffff00";
+        { "#ff0000", 1.0 };
+        { "#00ff00", 1.0 };
+        { "#0000ff", 1.0 };
+        { "#00ffff", 0.8 };
+        { "#ff00ff", 0.8 };
+        { "#ffff00", 0.7 };
     };
     -- Dark and bright colors for secondary background.
     secondary_background = {
-        "#000000";
-        "#ffffff";
-        "#aaffff";
-        "#ffaaff";
-        "#ffffaa";
-        "#550000";
-        "#005500";
-        "#000055";
+        { "#000000", 0.2 };
+        { "#ffffff", 1.0 };
+        { "#aaffff", 0.7 };
+        { "#ffaaff", 0.7 };
+        { "#ffffaa", 0.7 };
+        { "#550000", 0.7 };
+        { "#005500", 0.7 };
+        { "#000055", 0.7 };
     };
     -- Alert colors for features.
     feature = {
-        "#ff2222";
-        "#ff8800";
-        "#ff0088";
-        "#882222";
-        "#ffdd33";
+        { "#ff2222", 1.0 };
+        { "#ff8800", 0.8 };
+        { "#ff0088", 0.7 };
+        { "#882222", 0.5 };
+        { "#ffdd33", 0.4 };
+        { "#000000", 0.3 };
     };
 };
 
@@ -120,10 +121,11 @@ local function max_contrast(pool, state)
     local best_color;
     local best_color_distance = 0;
 
-    for _, color in ipairs(pool) do
+    for _, c in ipairs(pool) do
+        local color, factor = c[1], c[2]
         local min_distance = math.huge;
         for _, other_color in ipairs(other_colors) do
-            min_distance = math.min(min_distance, redmean_sqr(color, other_color));
+            min_distance = math.min(min_distance, redmean_sqr(color, other_color) * factor);
         end
         if min_distance > best_color_distance then
             best_color = color;
