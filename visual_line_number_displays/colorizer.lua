@@ -140,10 +140,10 @@ end
 --! @p current_state, and contrast maximized colors for the other colors.
 function visual_line_number_displays.populate_color_state(current_state)
     local result = {
-        text_explicit = current_state.text_explicit or false;
-        background_explicit = current_state.background_explicit or false;
-        secondary_background_explicit = current_state.secondary_background_explicit or false;
-        feature_explicit = current_state.feature_explicit or false;
+        text_explicit = current_state.text_explicit and true or false;
+        background_explicit = current_state.background_explicit and true or false;
+        secondary_background_explicit = current_state.secondary_background_explicit and true or false;
+        feature_explicit = current_state.feature_explicit and true or false;
     };
 
     if result.text_explicit then

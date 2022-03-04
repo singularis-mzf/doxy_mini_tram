@@ -21,18 +21,18 @@ local function line_1_colors()
         background_explicit = true;
         text = "#ffffff";
         text_explicit = false;
-        secondary_background = "#000000";
+        secondary_background = "#550000";
         secondary_background_explicit = false;
-        feature = "#ff8800";
-        feature_explicit = false;
+        feature = "#ff2222";
+        feature_explicit = true;
     };
 end
 
 local function line_1_colorize(block)
     block.background_color = "#1e00ff";
     block.text_color = "#ffffff";
-    block.secondary_background_color = "#000000";
-    block.feature_color = "#ff8800";
+    block.secondary_background_color = "#550000";
+    block.feature_color = "#ff2222";
     return block;
 end
 
@@ -310,7 +310,7 @@ describe("colorize_blocks", function()
         reference[5].background_shape = "diamond";
         reference[2].background_color = "#1100ff";
         reference[4].background_color = "#1111ff";
-        reference[4].feature_color = "#ffdd33";
+        reference[4].feature_color = "#ff2222";
         reference[5].background_color = "#2200ff";
 
         local color_reference = line_1_colors();

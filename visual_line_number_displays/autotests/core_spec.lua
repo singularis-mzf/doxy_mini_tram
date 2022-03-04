@@ -24,8 +24,8 @@ local function line_1_colorize(blocks)
     for _, block in ipairs(blocks) do
         block.text_color = "#ffffff";
         block.background_color = "#1e00ff";
-        block.secondary_background_color = "#000000";
-        block.feature_color = "#ff8800";
+        block.secondary_background_color = "#550000";
+        block.feature_color = "#ff2222";
     end
 
     return blocks;
@@ -39,14 +39,14 @@ describe("parse_display_string()", function()
     end
 
     it("parses very simple line numbers", function()
-        local number, text, details = pds("18");
+        local number, text, details = pds("1");
 
         local number_reference = {
             {
-                text = "18";
+                text = "1";
                 features = {};
-                required_size = wh(10, 8);
-                text_size = wh(10, 8);
+                required_size = wh(5, 8);
+                text_size = wh(5, 8);
             };
         };
 
@@ -128,16 +128,16 @@ describe("parse_display_string()", function()
     end);
 
     it("parses complex line numbers", function()
-        local number, text, details = pds("\\/<<RE11>>; Köln HBF [[U]] ((S))\nüber: ((S)) Chorweiler  {lpar}tief{rpar}");
+        local number, text, details = pds("\\/<<RE1>>; Köln HBF [[U]] ((S))\nüber: ((S)) Chorweiler  {lpar}tief{rpar}");
 
         local number_reference = {
             {
-                text = "RE11";
+                text = "RE1";
                 background_shape = "diamond";
                 background_pattern = "x_left";
                 features = {};
-                required_size = wh(35, 16);
-                text_size = wh(20, 8);
+                required_size = wh(21, 21);
+                text_size = wh(15, 8);
             };
         };
 
@@ -221,7 +221,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,18={vlnd_pixel.png^[multiply:#5747d1^[resize:92x24^[combine:92x16:1,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:13,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
+        assert.same("[combine:128x128:0,18={vlnd_pixel.png^[multiply:#877b3e^[resize:92x24^[combine:92x16:1,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:13,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
     end);
 
     it("renders a long display", function()
@@ -236,7 +236,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:256x256:0,36={vlnd_pixel.png^[multiply:#5747d1^[resize:220x48^[combine:220x32:2,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:25,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:195x12}}", rd(display_description, "16; Some Loooooong Destination"));
+        assert.same("[combine:256x256:0,36={vlnd_pixel.png^[multiply:#877b3e^[resize:220x48^[combine:220x32:2,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:25,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:195x12}}", rd(display_description, "16; Some Loooooong Destination"));
     end);
 
     it("renders a display with pattern background", function()
@@ -251,6 +251,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#5747d1^[resize:20x24^[combine:20x22:0,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#1e00ff^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#000000)}}:6,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#877b3e^[resize:20x24^[combine:20x22:0,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:6,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
     end);
 end);

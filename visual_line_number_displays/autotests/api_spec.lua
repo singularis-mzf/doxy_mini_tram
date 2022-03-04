@@ -20,20 +20,20 @@ describe("colors_for_line()", function()
                 background_explicit = true;
                 text = "#ffffff";
                 text_explicit = false;
-                secondary_background = "#000000";
+                secondary_background = "#550000";
                 secondary_background_explicit = false;
-                feature = "#ff8800";
-                feature_explicit = false;
+                feature = "#ff2222";
+                feature_explicit = true;
             }, cfl(1));
         assert.same({
                 background = "#ff001e";
                 background_explicit = true;
                 text = "#ffffff";
                 text_explicit = false;
-                secondary_background = "#000000";
+                secondary_background = "#ffaaff";
                 secondary_background_explicit = false;
-                feature = "#ffdd33";
-                feature_explicit = false;
+                feature = "#000000";
+                feature_explicit = true;
             }, cfl(2));
         assert.same(nil, cfl(""));
         assert.same(nil, cfl("1"));
