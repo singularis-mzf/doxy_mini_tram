@@ -633,6 +633,8 @@ function visual_line_number_displays.entity_value(entity)
             bytes[2] = 0x80 + math.floor(codepoint * byte_3_pos) % 0x40;
             bytes[3] = 0x80 + math.floor(codepoint * byte_2_pos) % 0x40;
             bytes[4] = 0x80 + codepoint % 0x40;
+        else
+            return nil;
         end
 
         -- Create a Lua string.

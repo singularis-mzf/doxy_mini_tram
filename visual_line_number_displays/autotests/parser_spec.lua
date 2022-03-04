@@ -629,6 +629,7 @@ describe("parse_entities_in_blocks()", function()
         assert.same(bytes("❶"), bytes(peb({t("{#x2776}")})));
         assert.same(bytes("𠃑"), bytes(peb({t("{#x200d1}")})));
         assert.same(bytes("{#}"), bytes(peb({t("{#}")})));
+        assert.same(bytes("{#x110000}"), bytes(peb({t("{#x110000}")})));
     end);
 
     it("Preserves text", function()
