@@ -8,6 +8,7 @@ package.path = "visual_line_number_displays/?.lua;" .. package.path
 -- See https://rubenwardy.com/minetest_modding_book/en/quality/unit_testing.html
 _G.visual_line_number_displays = {};
 
+require("api");
 require("parser");
 require("basic_entities");
 
@@ -619,5 +620,55 @@ describe("parse_entities_in_blocks()", function()
         assert.same({t("}(")}, peb({t("}{lpar}")}));
         assert.same({t("<{gt")}, peb({t("{lt}{gt")}));
         assert.same({t("{invalidentity}")}, peb({t("{invalidentity}")}));
+    end);
+end);
+
+describe("parse_macros()", function()
+    local function pm(input)
+        local a, b = visual_line_number_displays.parse_macros(input);
+        return { a, b };
+    end
+
+    local macros = {
+        macro1 = "macro_1_expanded";
+        macro2 = "";
+        macro3 = "{macro3}";
+        ["macro4="] = { "before", "between", "after" };
+        ["macro5="] = { "" };
+        ["macro6="] = {};
+        macro7 = "ab{macro3}de{{macro2}}fg{{}macro7}";
+    };
+
+    setup(function()
+        for k, v in pairs(macros) do
+            visual_line_number_displays.macros[k] = v;
+        end
+    end);
+
+    it("replaces basic macros", function()
+        assert.same({ "macro_1_expanded", true }, pm("{macro1}"));
+        assert.same({ "macro1", false }, pm("macro1"));
+        assert.same({ "macro_1_expandedmacro_1_expanded", true }, pm("{macro1}{macro1}"));
+        assert.same({ "bla macro_1_expanded}macro_1_expanded bla", true }, pm("bla {macro1}}{macro1} bla"));
+        assert.same({ "{{macro1}}", false }, pm("{{macro1}}"));
+        assert.same({ "", true }, pm("{macro2}"));
+        assert.same({ "{macro3}", true }, pm("{macro3}"));
+        assert.same({ "{macrowrong}", false }, pm("{macrowrong}"));
+        assert.same({ "{macrowrong{}{macro1}}", false }, pm("{macrowrong{}{macro1}}"));
+        assert.same({ "{}macro_1_expanded}", true }, pm("{}{macro1}}"));
+    end);
+
+    it("replaces macros with parameter", function()
+        assert.same({ "beforeparambetweenparamafter", true }, pm("{macro4=param}"));
+        assert.same({ "before{macro1}between{macro1}after", true }, pm("{macro4={macro1}}"));
+        assert.same({ "before{macro4={}}between{macro4={}}after", true }, pm("{macro4={macro4={}}}"));
+        assert.same({ "blabla", true }, pm("bla{macro5=abc}bla"));
+        assert.same({ "blabla", true }, pm("bla{macro6=abc}bla"));
+    end);
+
+    teardown(function()
+        for k, _ in pairs(macros) do
+            visual_line_number_displays.macros[k] = nil;
+        end
     end);
 end);

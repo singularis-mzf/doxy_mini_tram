@@ -604,6 +604,88 @@ function visual_line_number_displays.parse_line_breaks_in_blocks(blocks)
     end
 end
 
+--! Parses the inner part of a macro brace sequence and returns the result or nil.
+function visual_line_number_displays.expand_macro(input)
+    local equal = string.find(input, "=", 1, --[[ plain ]] true);
+    if equal then
+        local macro = string.sub(input, 1, equal);
+        local argument = string.sub(input, equal + 1);
+        local expanded = visual_line_number_displays.macros[macro];
+        if not expanded then
+            return nil;
+        end
+
+        return table.concat(expanded, argument);
+    else
+        return visual_line_number_displays.macros[input];
+    end
+end
+
+--! Returns the end position of the brace pair starting at @p pos or nil.
+--! Handles nested brace pairs.
+local function brace_pair_end(input, pos)
+    local next_left = string.find(input, "{", pos + 1, --[[ plain ]] true);
+    local next_right = string.find(input, "}", pos + 1, --[[ plain ]] true);
+
+    if not next_right then
+        return nil;
+    elseif not next_left then
+        return next_right;
+    elseif next_right < next_left then
+        return next_right;
+    else
+        local nested_end = brace_pair_end(input, next_left);
+
+        -- Nested brace pair found inside current brace pair.
+        -- Continue the search for nested brace pairs after this one.
+        return brace_pair_end(input, nested_end);
+    end
+end
+
+--! Parses macro brace sequences in @p input, and returns the result.
+--!
+--! To handle nested macros, it also returns whether macros were expanded.
+--!
+--! @returns string, may_contain_nested_macros
+function visual_line_number_displays.parse_macros(input)
+    local result = "";
+    local expanded_anything = false;
+
+    local pos = 1;
+    while pos <= #input do
+        left = string.find(input, "{", pos, --[[ plain ]] true);
+        if not left then
+            return result .. string.sub(input, pos), expanded_anything;
+        end
+        result = result .. string.sub(input, pos, left - 1);
+
+        right = brace_pair_end(input, left);
+        if not right then
+            return result .. string.sub(input, pos), expanded_anything;
+        end
+
+        local macro = string.sub(input, left + 1, right - 1);
+        local expanded = visual_line_number_displays.expand_macro(macro);
+        if not expanded then
+            result = result .. "{" .. macro .. "}";
+        else
+            result = result .. expanded;
+            expanded_anything = true;
+        end
+
+        pos = right + 1;
+
+        if #result > 250 then
+            -- Macro expansion too long,
+            -- add a warning that is always outside any brace sequences.
+            -- And stop further processing of macros.
+            return result .. string.sub(input, pos) .. "} maximum length exceeded", false;
+        end
+    end
+
+    return result, expanded_anything;
+end
+
 --! Parses entity brace sequences in @p blocks, modifying blocks in-place.
 --! @p blocks is a list of text_block_description tables.
 function visual_line_number_displays.parse_entities_in_blocks(blocks)

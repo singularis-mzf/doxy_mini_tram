@@ -39,6 +39,14 @@ end
 --! @returns number_blocks, text_blocks, details_blocks,
 --! which are lists of text_block_description tables; and background_color.
 function visual_line_number_displays.parse_display_string(input)
+    for _ = 1, 4 do
+        local result, continue = visual_line_number_displays.parse_macros(input);
+        input = result;
+        if not continue then
+            break;
+        end
+    end
+
     local block_list = visual_line_number_displays.parse_text_block_string(input);
 
     local number_blocks = {};

@@ -111,6 +111,27 @@ end
 --! \li @c level String specifying up to which section it is rendered.
 --! Values: @c number, @c text, @c details.
 
+--! Macros are brace sequences which are parsed at the very beginning
+--! of processing a line number display string.
+--! Macros expand to another string, which is placed at the position of the macro.
+--!
+--! Example: “{some_macro}”
+--!
+--! To define a macro, add an element to this table.
+--! The key must be a string, which is the macro name without braces.
+--! The value must be a string, which is the expanded form of the macro.
+--!
+--! Macros can take one argument after an equals sign.
+--! Example: “{macro=argument}”
+--!
+--! The equals sign is part of the macro name,
+--! so it needs to be included in the key of the table element.
+--! The value must be a list of strings.
+--! These strings are then concatenated, with the argument as separator.
+--!
+--! Example: <tt>macros["l="] = { "{line_", "}" }</tt>
+visual_line_number_displays.macros = {};
+
 --! Adds line number displays to advtrains wagon @c wagon_definition.
 --!
 --! @param wagon_definition The table which will be passed to advtrains.register_wagon().
