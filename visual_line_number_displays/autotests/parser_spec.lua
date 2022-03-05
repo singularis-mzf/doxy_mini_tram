@@ -607,11 +607,11 @@ describe("parse_entities_in_blocks()", function()
             text = text_or_block[1].text;
         end
 
-        local bytes = {};
+        local result = {};
         for i = 1, #text do
-            table.insert(bytes, string.format("0x%02x", string.byte(string.sub(text, i, i))));
+            table.insert(result, string.format("0x%02x", string.byte(string.sub(text, i, i))));
         end
-        return bytes;
+        return result;
     end
 
     describe("bytes() helper function", function()

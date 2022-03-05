@@ -56,28 +56,29 @@ function visual_line_number_displays.parse_display_string(input)
     local text_blocks = {};
     local details_blocks = {};
 
-    local block = 1;
-
-    for _, section in ipairs({ number_blocks, text_blocks }) do
-        while block <= #block_list do
-            local is_end, visible_text = visual_line_number_displays.ends_section(block_list[block]);
-            if is_end and visible_text then
-                block_list[block].text = visible_text;
-                table.insert(section, block_list[block]);
-                block = block + 1;
-                break;
-            elseif is_end then
-                block = block + 1;
-                break;
-            else
-                table.insert(section, block_list[block]);
-                block = block + 1;
+    do
+        local block = 1;
+        for _, section in ipairs({ number_blocks, text_blocks }) do
+            while block <= #block_list do
+                local is_end, visible_text = visual_line_number_displays.ends_section(block_list[block]);
+                if is_end and visible_text then
+                    block_list[block].text = visible_text;
+                    table.insert(section, block_list[block]);
+                    block = block + 1;
+                    break;
+                elseif is_end then
+                    block = block + 1;
+                    break;
+                else
+                    table.insert(section, block_list[block]);
+                    block = block + 1;
+                end
             end
         end
-    end
 
-    for i = block, #block_list do
-        table.insert(details_blocks, block_list[i]);
+        for i = block, #block_list do
+            table.insert(details_blocks, block_list[i]);
+        end
     end
 
     -- Parse various syntax features in blocks

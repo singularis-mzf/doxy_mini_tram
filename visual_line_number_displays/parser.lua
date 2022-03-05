@@ -56,23 +56,6 @@ local whitespace_characters = {
     ["\n"] = true;
 };
 
---! @returns text before last space, text after last space or nil.
-local function split_at_last_space(text)
-    local last_space = nil;
-
-    for position, character in utf_8_characters(text) do
-        if whitespace_characters[character] then
-            last_space = position;
-        end
-    end
-
-    if last_space and (last_space < #text) then
-        return string.sub(text, 1, last_space - 1), string.sub(text, last_space + 1);
-    else
-        return text;
-    end
-end
-
 --! @class text_block_description
 --! A text_block_description table describes style and text of one text block.
 --!
@@ -377,7 +360,7 @@ function visual_line_number_displays.parse_text_block_string(input)
                 end
 
                 if last_space then
-                    text_before = string.sub(text_after, last_space + 1);
+                    local text_before = string.sub(text_after, last_space + 1);
                     text_after = string.sub(text_after, 1, last_space);
 
                     finish_block();
@@ -705,13 +688,13 @@ function visual_line_number_displays.parse_macros(input)
 
     local pos = 1;
     while pos <= #input do
-        left = string.find(input, "{", pos, --[[ plain ]] true);
+        local left = string.find(input, "{", pos, --[[ plain ]] true);
         if not left then
             return result .. string.sub(input, pos), expanded_anything;
         end
         result = result .. string.sub(input, pos, left - 1);
 
-        right = brace_pair_end(input, left);
+        local right = brace_pair_end(input, left);
         if not right then
             return result .. string.sub(input, pos), expanded_anything;
         end
