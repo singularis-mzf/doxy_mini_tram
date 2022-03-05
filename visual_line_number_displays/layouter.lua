@@ -292,6 +292,10 @@ visual_line_number_displays.display_layout = {
 
     --! blocks_layout object to appear below @c text_section.
     details_section = {};
+
+    --! Additional padding to make the display
+    --! at least square in width.
+    x_padding = 0;
 };
 
 --! Creates a display_layout object from text_block_description table lists.
@@ -318,9 +322,9 @@ end
 function visual_line_number_displays.display_layout:width()
     if next(self.text_section) or next(self.details_section) then
         -- Include 2px spacing between number and text sections.
-        return self.number_section:width() + math.max(self.text_section:width(), self.details_section:width()) + 2;
+        return self.number_section:width() + math.max(self.text_section:width(), self.details_section:width()) + 2 + self.x_padding * 2;
     else
-        return self.number_section:width();
+        return self.number_section:width() + self.x_padding * 2;
     end
 end
 
@@ -388,11 +392,18 @@ function visual_line_number_displays.display_layout:calculate_layout(max_width, 
 
     -- Position.
     local width = self:width();
+    if width < height then
+        self.x_padding = math.floor(math.min(height - width, max_width - width) * 0.5);
+    end
+
     local number_width = self.number_section:width();
 
-    self.number_section:align({ x = number_width * 0.5, y = height * 0.5 });
+    self.number_section:align({
+            x = number_width * 0.5 + self.x_padding;
+            y = height * 0.5
+        });
 
-    local text_x_center = (width + number_width + 2) * 0.5; -- Include spacing.
+    local text_x_center = (width + number_width + 2) * 0.5 + self.x_padding; -- Include spacing.
 
     local th = self.text_section:height()
     local dh = self.details_section:height();
@@ -404,7 +415,9 @@ function visual_line_number_displays.display_layout:calculate_layout(max_width, 
     self.details_section:align({ x = text_x_center, y = details_y_center });
 end
 
---! Returns bottom_right corner of the whole layout as table with @c x and @c y.
+--! Returns bottom_right corner of the whole layout,
+--! including horizontal padding,
+--! as table with @c x and @c y.
 function visual_line_number_displays.display_layout:bottom_right()
     local x_max = 0;
     local y_max = 0;
@@ -416,5 +429,5 @@ function visual_line_number_displays.display_layout:bottom_right()
         end
     end
 
-    return { x = x_max, y = y_max };
+    return { x = x_max + self.x_padding, y = y_max };
 end

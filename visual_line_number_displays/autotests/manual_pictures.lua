@@ -9,7 +9,7 @@ return {
         -- Display string input
         "1";
         -- Expected texture string (with autotest mocks)
-        "[combine:128x26:0,0={vlnd_pixel.png^[multiply:#1e00ff^[resize:5x26^[combine:5x17:1,9={[combine:5x8:0,0=1.png^[colorize:#ffffff}}";
+        "[combine:128x26:0,0={vlnd_pixel.png^[multiply:#1e00ff^[resize:25x26^[combine:25x17:11,9={[combine:5x8:0,0=1.png^[colorize:#ffffff}}";
         -- Display configuration: max_width, height, level
         { 128, 26, "number" };
     };

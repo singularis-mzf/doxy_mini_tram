@@ -251,6 +251,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#998314^[resize:20x24^[combine:20x22:0,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:6,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#998314^[resize:24x24^[combine:24x22:2,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:8,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
     end);
 end);

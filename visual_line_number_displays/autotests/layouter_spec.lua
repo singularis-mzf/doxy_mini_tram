@@ -479,16 +479,17 @@ describe("display_layout", function()
         local reference = {
             number_section = {{
                 block = number_blocks[1];
-                position = { x = 0, y = 7 };
+                position = { x = 2, y = 7 };
                 scale = 1;
                 size = { width = 15, height = 5 };
             }};
             text_section = {};
             details_section = {};
+            x_padding = 2;
         };
 
         assert.same(reference, display);
-        assert.same({ x = 15, y = 12 }, display:bottom_right());
+        assert.same({ x = 19, y = 12 }, display:bottom_right());
     end);
 
     it("calculates a less simple layout", function()
