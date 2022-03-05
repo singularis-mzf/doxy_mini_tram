@@ -14,3 +14,8 @@ dofile(modpath .. "/core.lua");
 dofile(modpath .. "/layouter.lua");
 dofile(modpath .. "/parser.lua");
 dofile(modpath .. "/renderer.lua");
+
+local render_manual_pictures = true;
+if render_manual_pictures then
+    dofile(modpath .. "/autotests/render_manual_pictures.lua");
+end
