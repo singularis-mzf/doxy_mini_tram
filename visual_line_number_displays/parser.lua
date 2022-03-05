@@ -599,10 +599,6 @@ function visual_line_number_displays.parse_line_breaks_in_blocks(blocks)
     end
 end
 
-local byte_2_pos = 1 / 0x40;
-local byte_3_pos = 1 / 0x1000;
-local byte_4_pos = 1 / 0x40000;
-
 --! Returns the string value of the entity @p entity (without braces) or nil.
 function visual_line_number_displays.entity_value(entity)
     if string.sub(entity, 1, 1) == "#" then
@@ -618,32 +614,7 @@ function visual_line_number_displays.entity_value(entity)
         end
 
         -- Split in UTF-8 bytes.
-        local bytes = {};
-        if codepoint <= 0x7f then
-            bytes[1] = codepoint;
-        elseif codepoint <= 0x7ff then
-            bytes[1] = 0xc0 + math.floor(codepoint * byte_2_pos);
-            bytes[2] = 0x80 + codepoint % 0x40;
-        elseif codepoint <= 0xffff then
-            bytes[1] = 0xe0 + math.floor(codepoint * byte_3_pos);
-            bytes[2] = 0x80 + math.floor(codepoint * byte_2_pos) % 0x40;
-            bytes[3] = 0x80 + codepoint % 0x40;
-        elseif codepoint <= 0x10ffff then
-            bytes[1] = 0xf0 + math.floor(codepoint * byte_4_pos);
-            bytes[2] = 0x80 + math.floor(codepoint * byte_3_pos) % 0x40;
-            bytes[3] = 0x80 + math.floor(codepoint * byte_2_pos) % 0x40;
-            bytes[4] = 0x80 + codepoint % 0x40;
-        else
-            return nil;
-        end
-
-        -- Create a Lua string.
-        -- table.unpack() is too new for Minetest.
-        local result = "";
-        for _, b in ipairs(bytes) do
-            result = result .. string.char(b);
-        end
-        return result;
+        return visual_line_number_displays.codepoint_to_string(codepoint);
     else
         return visual_line_number_displays.basic_entities[entity];
     end

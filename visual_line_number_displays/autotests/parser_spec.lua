@@ -625,6 +625,7 @@ describe("parse_entities_in_blocks()", function()
         assert.same({t("\127")}, peb({t("{#127}")}));
         assert.same(bytes("\194\128"), bytes(peb({t("{#128}")})));
         assert.same(bytes("±"), bytes(peb({t("{#xb1}")})));
+        assert.same(bytes("±"), bytes(peb({t("{#x00b1}")})));
         assert.same(bytes("ł"), bytes(peb({t("{#x142}")})));
         assert.same(bytes("❶"), bytes(peb({t("{#x2776}")})));
         assert.same(bytes("𠃑"), bytes(peb({t("{#x200d1}")})));
