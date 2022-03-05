@@ -39,6 +39,7 @@ end
 --! @returns number_blocks, text_blocks, details_blocks,
 --! which are lists of text_block_description tables; and background_color.
 function visual_line_number_displays.parse_display_string(input)
+    -- Parse macro syntax
     for _ = 1, 4 do
         local result, continue = visual_line_number_displays.parse_macros(input);
         input = result;
@@ -47,8 +48,10 @@ function visual_line_number_displays.parse_display_string(input)
         end
     end
 
+    -- Make blocks from syntax
     local block_list = visual_line_number_displays.parse_text_block_string(input);
 
+    -- Split blocks in number, text, details sections
     local number_blocks = {};
     local text_blocks = {};
     local details_blocks = {};
@@ -77,6 +80,7 @@ function visual_line_number_displays.parse_display_string(input)
         table.insert(details_blocks, block_list[i]);
     end
 
+    -- Parse various syntax features in blocks
     visual_line_number_displays.parse_line_breaks_in_blocks(number_blocks);
     visual_line_number_displays.parse_line_breaks_in_blocks(text_blocks);
     visual_line_number_displays.parse_line_breaks_in_blocks(details_blocks);
@@ -87,7 +91,7 @@ function visual_line_number_displays.parse_display_string(input)
     end
 
     visual_line_number_displays.colorize_blocks(number_blocks, colors);
-    local background_color = visual_line_number_displays.shade_background_color(colors.background);
+    local display_background_color = colors.background;
     visual_line_number_displays.colorize_blocks(text_blocks, colors);
     visual_line_number_displays.colorize_blocks(details_blocks, colors);
 
@@ -99,7 +103,20 @@ function visual_line_number_displays.parse_display_string(input)
     visual_line_number_displays.calculate_block_sizes(text_blocks);
     visual_line_number_displays.calculate_block_sizes(details_blocks);
 
-    return number_blocks, text_blocks, details_blocks, background_color;
+    -- Shade display background color if it is used by an outline-less block.
+    for _, blocks in ipairs({ number_blocks, text_blocks, details_blocks }) do
+        for _, block in ipairs(blocks) do
+            if block.background_color == display_background_color then
+                local shape = block.background_shape;
+                if shape and (not string.find(shape, "_outlined", 1, --[[ plain ]] true)) then
+                    display_background_color = visual_line_number_displays.shade_background_color(display_background_color);
+                    break;
+                end
+            end
+        end
+    end
+
+    return number_blocks, text_blocks, details_blocks, display_background_color;
 end
 
 --! Returns a texture string.

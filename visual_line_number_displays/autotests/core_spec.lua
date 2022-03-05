@@ -221,7 +221,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,18={vlnd_pixel.png^[multiply:#877b3e^[resize:92x24^[combine:92x16:1,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:13,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
+        assert.same("[combine:128x128:0,18={vlnd_pixel.png^[multiply:#998314^[resize:92x24^[combine:92x16:1,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}:13,8={[combine:80x8:0,0=Some Destination.png^[colorize:#ffffff}}", rd(display_description, "16; Some Destination"));
     end);
 
     it("renders a long display", function()
@@ -236,7 +236,7 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:256x256:0,36={vlnd_pixel.png^[multiply:#877b3e^[resize:220x48^[combine:220x32:2,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:25,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:195x12}}", rd(display_description, "16; Some Loooooong Destination"));
+        assert.same("[combine:256x256:0,36={vlnd_pixel.png^[multiply:#998314^[resize:220x48^[combine:220x32:2,16={[combine:10x8:0,0=16.png^[colorize:#ffffff^[resize:20x16}:25,18={[combine:130x8:0,0=Some Loooooong Destination.png^[colorize:#ffffff^[resize:195x12}}", rd(display_description, "16; Some Loooooong Destination"));
     end);
 
     it("renders a display with pattern background", function()
@@ -251,6 +251,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#877b3e^[resize:20x24^[combine:20x22:0,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:6,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
+        assert.same("[combine:128x128:0,4={vlnd_pixel.png^[multiply:#998314^[resize:20x24^[combine:20x22:0,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:6,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
     end);
 end);
