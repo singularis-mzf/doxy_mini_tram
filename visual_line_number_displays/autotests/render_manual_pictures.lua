@@ -14,15 +14,25 @@ local reference = dofile(minetest.get_modpath("visual_line_number_displays") .. 
 -- These ASCII characters are problematic in file paths
 -- or in texture strings, or are otherwise weird.
 local characters_to_escape = {
+    ["\\"] = true;
     ["/"] = true;
     ["."] = true;
     [" "] = true;
     ["%"] = true;
+    ["+"] = true;
     [":"] = true;
+    [";"] = true;
     ["^"] = true;
+    ["#"] = true;
+    ["\""] = true;
+    ["'"] = true;
     ["|"] = true;
     ["("] = true;
     [")"] = true;
+    ["<"] = true;
+    [">"] = true;
+    ["["] = true;
+    ["]"] = true;
 };
 
 --! Returns a string containing byte @p octet, possibly escaped.
