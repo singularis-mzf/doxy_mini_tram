@@ -33,7 +33,8 @@
 --! If the integer doesn’t match, the next block is tried.
 --!
 --! If the value is a color_state table, colors are defined individually.
---! At least @c background must be provided.
+--! At least the element @c background must be provided.
+--! If the other colors are omitted, they are calculated automatically.
 visual_line_number_displays.line_colors = {};
 
 --! Returns a color_state table for @p line, or nil.
