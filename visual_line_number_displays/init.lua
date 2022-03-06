@@ -15,7 +15,13 @@ dofile(modpath .. "/layouter.lua");
 dofile(modpath .. "/parser.lua");
 dofile(modpath .. "/renderer.lua");
 
-local render_manual_pictures = true;
+-- This placeholder is expanded by git-archive,
+-- so in a mod archive the variable is false.
+-- The autotests/ directory is not available in a mod archive.
+--
+-- The file is necessary for the /render_manual_pictures command,
+-- so it is needless to say it will only work correctly with a custom client.
+local render_manual_pictures = string.sub("$Format:%%$", 1, 1) == "$";
 if render_manual_pictures then
-    dofile(modpath .. "/autotests/render_manual_pictures.lua");
+    pcall(dofile, modpath .. "/autotests/render_manual_pictures.lua");
 end

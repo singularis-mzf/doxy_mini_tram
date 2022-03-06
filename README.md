@@ -58,6 +58,8 @@ git archive --format tar HEAD | tar --extract --one-top-level=doxy_mini_tram --d
 
 (Using GNU tar.)
 
+Note that `git-archive-all` does **not** work correctly wtih this repository.
+
 ## License
 
 The mod is licensed as CC-BY-SA-4.0 (media) and MIT (code).
