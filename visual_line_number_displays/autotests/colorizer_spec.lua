@@ -103,8 +103,8 @@ describe("colorize_block()", function()
         assert.same(line_1_colors(), colors);
     end);
 
-    it("colorizes a shaped block with color sequence", function()
-        local block = t("A{b:#1e00ff}");
+    it("colorizes a shaped block with color sequence 1", function()
+        local block = t("A{background:#1e00ff}");
         block.background_shape = "round";
 
         local reference = t("A");
@@ -116,6 +116,31 @@ describe("colorize_block()", function()
 
         local colors_leftover_reference = line_1_colors();
         colors_leftover_reference.background = "#1c00ff";
+
+        cb(block, line_1_colors());
+
+        assert.same(reference, block);
+        assert.same(colors_leftover_reference, colors);
+    end);
+
+    it("colorizes a shaped block with color sequence 2", function()
+        -- The color #000 seemed to cause bugs.
+        local block = t("A{b:#000}");
+        block.background_shape = "round";
+
+        local reference = t("A");
+        reference.background_shape = "round";
+        reference = line_1_colorize(reference);
+        reference.background_color = "#000000";
+        reference.secondary_background_color = "#ffaaff";
+
+        local colors = line_1_colors();
+        colors.background = "#000000";
+        colors.secondary_background = "#ffaaff";
+
+        local colors_leftover_reference = line_1_colors();
+        colors_leftover_reference.background = "#000000";
+        colors_leftover_reference.secondary_background = "#ffaaff";
 
         cb(block, line_1_colors());
 

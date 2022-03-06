@@ -234,7 +234,7 @@ function visual_line_number_displays.parse_color_string(input)
         end
     elseif #input == 4 and string.sub(input, 1, 1) == "#" then
         local number = tonumber(string.sub(input, 2), 16);
-        if number and number > 0 then
+        if number and number >= 0 then
             local r = string.sub(input, 2, 2);
             local g = string.sub(input, 3, 3);
             local b = string.sub(input, 4, 4);

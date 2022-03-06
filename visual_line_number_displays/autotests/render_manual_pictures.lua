@@ -21,6 +21,8 @@ local characters_to_escape = {
     [":"] = true;
     ["^"] = true;
     ["|"] = true;
+    ["("] = true;
+    [")"] = true;
 };
 
 --! Returns a string containing byte @p octet, possibly escaped.
