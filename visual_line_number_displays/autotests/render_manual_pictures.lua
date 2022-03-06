@@ -37,7 +37,8 @@ end
 --! Returns a string containing @p input with @c +xx escape sequences.
 local function escape_string(input)
     local result = "";
-    for _, octet in ipairs({ string.byte(input) }) do
+    for i = 1, #input do
+        local octet = string.byte(input, i);
         result = result .. escape_character(octet);
     end
     return result;
