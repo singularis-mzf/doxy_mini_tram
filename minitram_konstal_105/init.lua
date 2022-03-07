@@ -98,14 +98,14 @@ if visual_line_number_displays and visual_line_number_displays.setup_advtrains_w
                 {
                     position = { x = 0, y = 3 };
                     max_width = 128;
-                    center_width = 32;
+                    center_width = 56;
                     height = 26;
                     level = "number";
                 };
                 {
                     position = { x = 0, y = 99 };
                     max_width = 128;
-                    center_width = 32;
+                    center_width = 56;
                     height = 26;
                     level = "number";
                 };
