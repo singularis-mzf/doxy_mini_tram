@@ -21,33 +21,89 @@ local konstal_105_definition = {
         {
             name = S("Front Driver Stand");
             attach_offset = V(-2, 2, 34);
-            view_offset = V(0, 0, 2);
-            group = "driver_stands";
+            view_offset = V(0, 0, 0);
+            group = "front_driver_stand";
         };
         {
-            name = S("Passenger Area 1");
+            name = S("Rear Driver Stand");
+            attach_offset = V(-2, 2, -34);
+            view_offset = V(0, 0, 0);
+            advtrains_attachment_offset_patch_attach_rotation = V(0, 180, 0);
+            group = "rear_driver_stand";
+        };
+        {
+            name = S("Passenger Seat 1");
             attach_offset = V(3, 2, 39);
-            view_offset = V(1, 0, 2);
-            group = "passenger_area_1";
+            view_offset = V(0, 0, 0);
+            group = "passenger_seat_1";
+        };
+        {
+            name = S("Passenger Seat 2");
+            attach_offset = V(7, 3, 12);
+            view_offset = V(0, 0, 0);
+            advtrains_attachment_offset_patch_attach_rotation = V(0, 90, 0);
+            group = "passenger_seat_2";
+        };
+        {
+            name = S("Passenger Seat 3");
+            attach_offset = V(-7, 3, -12);
+            view_offset = V(0, 0, 0);
+            advtrains_attachment_offset_patch_attach_rotation = V(0, 270, 0);
+            group = "passenger_seat_3";
+        };
+        {
+            name = S("Passenger Seat 4");
+            attach_offset = V(3, 2, -39);
+            view_offset = V(0, 0, 0);
+            advtrains_attachment_offset_patch_attach_rotation = V(0, 180, 0);
+            group = "passenger_seat_4";
         };
     };
     seat_groups = {
-        driver_stands = {
-            name = S("Driver Stands");
-            access_to = { "passenger_area_1" };
+        front_driver_stand = {
+            name = S("Front Driver Stand");
+            access_to = { "rear_driver_stand", "passenger_seat_1" };
             require_doors_open = true;
             driving_ctrl_access = true;
         };
-        passenger_area_1 = {
-            name = S("Passenger Area");
-            access_to = { "driver_stands" };
+        rear_driver_stand = {
+            name = S("Rear Driver Stand");
+            access_to = { "front_driver_stand", "passenger_seat_4" };
+            require_doors_open = true;
+            driving_ctrl_access = true;
+        };
+        passenger_seat_1 = {
+            name = S("Front");
+            access_to = { "front_driver_stand", "passenger_seat_2", "passenger_seat_3" };
+            require_doors_open = true;
+            driving_ctrl_access = false;
+        };
+        passenger_seat_2 = {
+            name = S("Left");
+            access_to = { "passenger_seat_1", "passenger_seat_3", "passenger_seat_4" };
+            require_doors_open = true;
+            driving_ctrl_access = false;
+        };
+        passenger_seat_3 = {
+            name = S("Right");
+            access_to = { "passenger_seat_1", "passenger_seat_2", "passenger_seat_4" };
+            require_doors_open = true;
+            driving_ctrl_access = false;
+        };
+        passenger_seat_4 = {
+            name = S("Back");
+            access_to = { "rear_driver_stand", "passenger_seat_2", "passenger_seat_3" };
             require_doors_open = true;
             driving_ctrl_access = false;
         };
     };
     assign_to_seat_group = {
-        "driver_stands";
-        "passenger_area_1";
+        "front_driver_stand";
+        "rear_driver_stand";
+        "passenger_seat_1";
+        "passenger_seat_4";
+        "passenger_seat_2";
+        "passenger_seat_3";
     };
     doors = {
         -- Somehow there is bleed from the closing animation,

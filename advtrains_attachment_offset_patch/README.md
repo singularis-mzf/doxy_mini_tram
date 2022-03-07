@@ -13,9 +13,13 @@ This mod implements the workaround.
 Players are not attached directly to the wagon, but to a dummy entity which is placed at the intended attachment position.
 This way, the eye_offset of the player can stay zero, and the bug is not triggered.
 
+Additionally, the rotation of the player entity can be specified per seat.
+
 ## Usage
 
 Before registering an advtrains wagon, call `advtrains_attachment_offset_patch.setup_advtrains_wagon()` on its definition table.
+
+To specify player rotation per seat, add a rotation vector called `advtrains_attachment_offset_patch_attach_rotation` to each seat definition.
 
 ## How it works
 

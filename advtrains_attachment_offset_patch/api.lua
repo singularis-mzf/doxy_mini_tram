@@ -4,8 +4,12 @@
 
 --! Tries to insert an attachment dummy to the attachment of @p player,
 --! if it is attached to an entity called @p parent_name.
-function advtrains_attachment_offset_patch.attach_player(player, parent_name)
-    local attachment_parent, _, attachment_offset = player:get_attach();
+--!
+--! @param player A player luaentity.
+--! @param parent_name The entity name of the entity on which @p player is expected.
+--! @param rotation Additional rotation for the new attachment. (Optional)
+function advtrains_attachment_offset_patch.attach_player(player, parent_name, rotation)
+    local attachment_parent, _, attachment_offset, attachment_rotation = player:get_attach();
     if not attachment_parent then
         return;
     end
@@ -15,8 +19,14 @@ function advtrains_attachment_offset_patch.attach_player(player, parent_name)
         return;
     end
 
+    if rotation then
+        attachment_rotation.x = attachment_rotation.x + rotation.x;
+        attachment_rotation.y = attachment_rotation.y + rotation.y;
+        attachment_rotation.z = attachment_rotation.z + rotation.z;
+    end
+
     local dummy = minetest.add_entity(attachment_parent:get_pos(), "advtrains_attachment_offset_patch:dummy_entity");
-    dummy:set_attach(attachment_parent, "", attachment_offset);
+    dummy:set_attach(attachment_parent, "", attachment_offset, attachment_rotation);
 
     player:set_attach(dummy);
 end

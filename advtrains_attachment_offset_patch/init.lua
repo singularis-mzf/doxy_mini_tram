@@ -48,7 +48,8 @@ function advtrains_attachment_offset_patch.get_on_override(self, clicker, seatno
 
     parent_get_on(self, clicker, seatno);
 
-    advtrains_attachment_offset_patch.attach_player(clicker, self.name);
+    local rotation = self.seats[seatno].advtrains_attachment_offset_patch_attach_rotation;
+    advtrains_attachment_offset_patch.attach_player(clicker, self.name, rotation);
 
     advtrains_attachment_offset_patch.cleanup_dummies(self.object);
 end
