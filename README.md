@@ -24,6 +24,11 @@ The windows are even bigger than busses use to have, so the nickname “aquarium
 
 ## Mods in this modpack
 
+### advtrains_attachment_offset_patch
+
+Adds “attachment dummy” objects to seats in `advtrains` wagons, so the Minetest client will set the eye position correctly.
+(Will probably be released as independent library mod.)
+
 ### minitram_konstal_105
 
 Contains the “Minitram Konstal 105” train model.
@@ -41,7 +46,12 @@ This mod contains compatibility code for several other mods’ items.
 ### multi_component_liveries
 
 Contains the logic used by `minitram_konstal_105_liveries`.
-Will probably be released as independent library mod.
+(Will probably be released as independent library mod.)
+
+### visual_line_number_displays
+
+Renders actually visible displays from the “text outside” property of `advtrains` trains. See <https://invent.kde.org/davidhurka/doxy_mini_tram/-/tree/master/visual_line_number_displays> for the “display string” syntax reference.
+(Will probably be released as independent library mod.)
 
 ## Installation
 
@@ -65,6 +75,9 @@ Note that `git-archive-all` does **not** work correctly wtih this repository.
 The mod is licensed as CC-BY-SA-4.0 (media) and MIT (code).
 
 Screenshots depict artwork from other Minetest mods, and are licensed as CC-BY-SA-4.0.
+
+Individual files, or sections of code, use other licenses like LGPL-2.1-only.
+Every single file contains exact copyright and licensing information.
 
 ## Contributing
 
