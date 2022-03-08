@@ -83,6 +83,7 @@ local function get_task(index)
 
     local display_description = {
         base_resolution = { width = max_width, height = height };
+        base_texture = "vlnd_transparent.png";
         displays = {{
             position = { x = 0, y = 0 };
             height = height;

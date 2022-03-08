@@ -150,6 +150,7 @@ end
 if visual_line_number_displays and visual_line_number_displays.setup_advtrains_wagon then
     visual_line_number_displays.setup_advtrains_wagon(konstal_105_definition, {
             base_resolution = { width = 128, height = 128 };
+            base_texture = "minitram_konstal_105_normal_line_number_signs_base_texture.png";
             displays = {
                 {
                     position = { x = 0, y = 3 };

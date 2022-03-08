@@ -127,8 +127,10 @@ end
 --! @param display_description A display_description table.
 --! @param display_string The string used for the outside train display.
 function visual_line_number_displays.render_displays(display_description, display_string)
+    local base_texture = display_description.base_texture;
+
     if #display_description.displays == 0 then
-        return "";
+        return base_texture;
     end
 
     local number, text, details, background_color = visual_line_number_displays.parse_display_string(display_string);
@@ -175,7 +177,11 @@ function visual_line_number_displays.render_displays(display_description, displa
         width = display_description.base_resolution.width * superresolution;
         height = display_description.base_resolution.height * superresolution;
     };
-    local texture_string = string.format("[combine:%ix%i", texture_size.width, texture_size.height);
+    local size_string = string.format("%ix%i", texture_size.width, texture_size.height);
+    -- Unfortunately, Minetest is unable to resize a base texture
+    -- to the size of a combine texture modifier.
+    -- Resize the base texture explictly.
+    local texture_string = base_texture .. "^[resize:" .. size_string .. "^[combine:" .. size_string;
 
     local layout_strings = {}
     for i = 1, #display_description.displays do
@@ -195,7 +201,7 @@ function visual_line_number_displays.render_displays(display_description, displa
     end
 
     if not next(layout_strings) then
-        return "";
+        return base_texture;
     end
 
     return texture_string .. table.concat(layout_strings);

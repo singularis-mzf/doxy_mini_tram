@@ -98,6 +98,8 @@ end
 --! It needs to have these elements:
 --! \li @c base_resolution Table with elements @c width and @c height,
 --! describing the size of the texture slot without superresolution.
+--! \li @c base_texture Texture string that will be used as base for
+--! the generated textures. (Usually a transparent image.)
 --! \li @c displays A list of descriptions for each display.
 --!
 --! Each element in the @c displays list needs to be a table with these elements:
