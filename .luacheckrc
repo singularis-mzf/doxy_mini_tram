@@ -17,6 +17,7 @@ ignore = {
 };
 
 globals = {
+    "advtrains_attachment_offset_patch";
     "minitram_konstal_105_liveries";
     "multi_component_liveries";
     "visual_line_number_displays";
@@ -34,6 +35,7 @@ read_globals = {
     "minetest";
     table = { fields = { "copy" } };
     vector = { fields = { "new" } };
+    "dump";
 
     -- busted API
     "describe";
