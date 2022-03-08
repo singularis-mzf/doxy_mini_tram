@@ -13,11 +13,13 @@ This library provides functionality to paint multiple livery layers on e. g. adv
 Get a painting tool (e. g. the `bike_painter` from the `bike` mod), and set all color channels to zero. (I. e. `#000000` 0% Alpha.)
 Paint the entity with this tool.
 You will get instructions sent via the chat.
-There you can see which livery components are available for this entity, which components are in use right now, and which “meta colors” can be used to paint individual colors.
+There you can see which livery components are available for this entity, which components are in use right now, and which “meta colors” can be used to paint individual components.
 
 A “meta color” is a color with the Red and Alpha channel set to zero.
 (If your tool does not have an Alpha channel, set just the Red channel to zero.)
 The Green and Blue channel are used to carry meta information.
+
+### Components
 
 Use the Green channel to select a livery component by its number.
 Leave the Blue channel at zero.
@@ -26,10 +28,23 @@ The livery component is now selected, and can be painted as usual.
 
 You can not just select livery components, you can also move them in the layer stack.
 To make a component appear on top of all others, set the Blue channel to 254.
-To move it between the second and third layer, set the Blue channel to 1.
+To move it between the second and third layer, set the Blue channel to 3.
 To remove it completely, set the Blue channel to 255.
 
 When you paint the entity with `#000000` 0% Alpha, you can see the current component stack.
+
+### Slots
+
+To copy a complex livery from one entity to another, you can use “slots”.
+There are 30 slots, of which 10 are private, and 20 are shared with all players.
+Paint `#0000NN` 0% Alpha, where NN is a slot number plus 100, to store a livery in a slot.
+Paint `#0000NN` 0% Alpha to load a livery from slot NN.
+
+### Presets
+
+If you do not want to paint individual components, you may check whether the entity provides “presets”.
+Paint `#000000` 0% Alpha, and check the list of presets.
+By painting `#0000NN` 0% Alpha, where NN is the index of the preset plus 200, you apply a preset.
 
 ## How it works
 

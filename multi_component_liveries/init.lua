@@ -6,3 +6,4 @@ multi_component_liveries = {};
 
 dofile(minetest.get_modpath("multi_component_liveries") .. "/core.lua");
 dofile(minetest.get_modpath("multi_component_liveries") .. "/api.lua");
+dofile(minetest.get_modpath("multi_component_liveries") .. "/slots.lua");

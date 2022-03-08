@@ -16,6 +16,10 @@ local function get_translator()
     end);
 end
 
+--! Replacement for minetest.chat_send_player().
+local function chat_send_player(_player, _message)
+end
+
 --! Replacement for Minetest’s table.copy().
 local function copy(t)
     local c = {};
@@ -33,6 +37,7 @@ end
 
 _G.minetest = {
     get_translator = get_translator;
+    chat_send_player = chat_send_player;
 };
 
 _G.table.copy = copy;
@@ -41,6 +46,7 @@ _G.table.copy = copy;
 -- But it should only do so if a player name is provided.
 require("core");
 require("api");
+require("slots");
 
 -- simple_liv, simple_def, etc. are functions which create brand new tables
 -- on demand. This saves the need for table.copy().
@@ -148,8 +154,17 @@ local function simple_def()
                 texture_file = "comp2.png";
             };
         };
+        presets = {
+            {
+                description = "simple_liv()";
+                livery_stack = simple_liv();
+            };
+            {
+                description = "red_liv()";
+                livery_stack = red_liv();
+            };
+        };
         base_texture_file = "base.png";
-        initial_livery = simple_liv();
     };
 end
 
@@ -170,14 +185,25 @@ local function painting_tool(color, alpha)
     };
 end
 
+--! Returns a table that behaves like a player luaentity.
+local function player(playername)
+    return {
+        is_player = function(_self)
+            return true;
+        end;
+        get_player_name = function(_self)
+            return playername;
+        end;
+    };
+end
 
 describe("paint_on_livery()", function()
-    local function paint(definition, stack, color, alpha)
+    local function paint(definition, stack, color, alpha, playername)
         -- The tool which is passed to paint_on_livery().
         -- This needs to return metadata with a get_string() method.
         local tool = painting_tool(color, alpha);
 
-        local result = multi_component_liveries.paint_on_livery(nil, definition, stack, tool);
+        local result = multi_component_liveries.paint_on_livery(playername and player(playername) or nil, definition, stack, tool);
 
         return {
             result = result;
@@ -185,14 +211,22 @@ describe("paint_on_livery()", function()
         };
     end
 
-    it("modifies nothing when requesting help", function()
+    before_each(function()
+        multi_component_liveries.private_slots = {};
+        multi_component_liveries.shared_slots = {};
+    end);
+
+    it("preserves livery when requesting help", function()
         assert.same({ result = false; stack = simple_liv(); },
                     paint(simple_def(), simple_liv(), "#000000", 0));
         assert.same({ result = false; stack = simple_liv(); },
                     paint(simple_def(), simple_liv(), "#00000000"));
         assert.same({ result = false; stack = red_liv(); },
                     paint(simple_def(), red_liv(), "#00000000"));
-        assert.same({ result = false; stack = {}; },
+    end);
+
+    it("initializes livery when requesting help", function()
+        assert.same({ result = false; stack = simple_liv(); },
                     paint(simple_def(), {}, "#00000000"));
     end);
 
@@ -313,6 +347,68 @@ describe("paint_on_livery()", function()
         assert.same({ result = false; stack = select_layer(simple_liv(), nil); },
                     paint(simple_def(), select_layer(simple_liv(), nil), "#ff0000ff"));
     end);
+
+    it("loads presets by number", function()
+        assert.same({ result = true; stack = simple_liv(); },
+                    paint(simple_def(), {}, "#0000c900"));
+        assert.same({ result = true; stack = simple_liv(); },
+                    paint(simple_def(), simple_liv(), "#0000c900"));
+        assert.same({ result = true; stack = red_liv(); },
+                    paint(simple_def(), empty_liv(), "#0000ca00"));
+        assert.same({ result = true; stack = red_liv(); },
+                    paint(simple_def(), red_liv(), "#0000ca00"));
+    end);
+
+    it("does not load invalid presets", function()
+        assert.same({ result = false; stack = {}; },
+                    paint(simple_def(), {}, "#0000cb00"));
+        assert.same({ result = false; stack = empty_liv(); },
+                    paint(simple_def(), empty_liv(), "#0000cb00"));
+        assert.same({ result = false; stack = simple_liv(); },
+                    paint(simple_def(), simple_liv(), "#0000cb00"));
+    end);
+
+    it("loads private slots by playername and number", function()
+        multi_component_liveries.private_slots = {
+            some_player = { [5] = red_liv() };
+        };
+        assert.same({ result = true; stack = red_liv(); },
+                    paint(simple_def(), {}, "#00000500", nil, "some_player"));
+        assert.same({ result = true; stack = red_liv(); },
+                    paint(simple_def(), simple_liv(), "#00000500", nil, "some_player"));
+    end);
+
+    it("saves private slots by playername and number", function()
+        assert.same({ result = false; stack = red_liv(); },
+                    paint(simple_def(), red_liv(), "#00006b00", nil, "some_player"));
+        assert.same({
+                some_player = { [7] = red_liv() };
+            }, multi_component_liveries.private_slots);
+    end);
+
+    it("loads shared slots by number", function()
+        multi_component_liveries.shared_slots[25] = red_liv();
+        assert.same({ result = true; stack = red_liv(); },
+                    paint(simple_def(), {}, "#00001900"));
+    end);
+
+    it("saves shared slots by number", function()
+        assert.same({ result = false; stack = red_liv(); },
+                    paint(simple_def(), red_liv(), "#00007d00"));
+        assert.same({
+                [25] = red_liv();
+            }, multi_component_liveries.shared_slots);
+    end);
+
+    it("does not load other players’ private slots", function()
+        multi_component_liveries.private_slots = {
+            other_player = { [5] = red_liv() };
+        };
+        assert.same({ result = false; stack = {}; },
+                    paint(simple_def(), {}, "#00000500", nil, "some_player"));
+        assert.same({ result = false; stack = simple_liv(); },
+                    paint(simple_def(), simple_liv(), "#00000500", nil, "some_player"));
+    end);
 end);
 
 describe("calculate_texture_string()", function()
@@ -358,8 +454,7 @@ local function wagon()
     };
 end
 
-
-describe("Support for advtrains wagons which historically have strings as livery property", function()
+describe("Support for advtrains wagons which historically have strings as livery property.", function()
     describe("calculate_texture_string()", function()
         local cts = multi_component_liveries.calculate_texture_string;
 
@@ -372,7 +467,7 @@ describe("Support for advtrains wagons which historically have strings as livery
     describe("set_livery()", function()
         local sl = multi_component_liveries.set_livery;
 
-        it("Clears livery property if it is a string", function()
+        it("initializes livery property if it is a string", function()
             local puncher = {};
 
             local itemstack = painting_tool("#000000", 0);
@@ -383,10 +478,10 @@ describe("Support for advtrains wagons which historically have strings as livery
 
             sl(wagon(), puncher, itemstack, persistent_data);
 
-            assert.same({}, persistent_data.livery);
+            assert.same(simple_liv(), persistent_data.livery);
         end);
 
-        it("Initializes livery property if it is a string", function()
+        it("initializes livery property if painting on a string", function()
             local puncher = {};
 
             local itemstack = painting_tool("#ff0000");
@@ -400,7 +495,7 @@ describe("Support for advtrains wagons which historically have strings as livery
             assert.same(red_liv(), persistent_data.livery);
         end);
 
-        it("Initializes livery property if it is missing", function()
+        it("initializes livery property if it is missing", function()
             local puncher = {};
 
             local itemstack = painting_tool("#ff0000");
@@ -414,7 +509,7 @@ describe("Support for advtrains wagons which historically have strings as livery
             assert.same(red_liv(), persistent_data.livery);
         end);
 
-        it("Paints on livery property as usual if it is valid", function()
+        it("paints on livery property as usual if it is valid", function()
             local puncher = {};
 
             local persistent_data = {

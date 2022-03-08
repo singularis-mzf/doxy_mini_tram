@@ -5,19 +5,23 @@
 --! @class livery_definition
 --! A livery_definition table is a Lua table which defines a livery set.
 --!
---! The table must contain the elements @c components, @c base_texture_file, and @c initial_livery.
+--! The table must contain the elements @c components, @c presets, @c base_texture_file, and @c initial_livery.
 --!
 --! @c components is a list of tables, which define one livery component each.
 --! Each livery component definition must have these properties:
 --! \li @c description A user facing string to describe the component.
 --! \li @c texture_file The file name of the component’s texture.
 --!
---! @c base_texture_file is the texture on which livery components are overlaid.
---!
---! @c initial_livery is a livery_stack which defines the livery stack
+--! @c presets is a list of 1 to 50 tables, which define one livery preset each.
+--! The first preset defines the livery stack
 --! until a player paints it the first time.
 --! This livery stack should be equivalent to the base texture,
 --! otherwise the first painting operation looks weird.
+--! Each livery preset definition must have these properties:
+--! \li @c description A user facing string to describe the preset.
+--! \li @c livery_stack A livery_stack table.
+--!
+--! @c base_texture_file is the texture on which livery components are overlaid.
 --!
 --! @par Example
 --! @code{.lua}
@@ -33,8 +37,29 @@
 --!             texture_file = "my_cat_mod_cat_feet_overlay.png";
 --!         };
 --!     };
+--!     presets = {
+--!         {
+--!             description = S("Cat with red feet");
+--!             livery_stack = cat_initial_livery;
+--!         };
+--!         {
+--!             description = S("Cat with white feet");
+--!             livery_stack = {
+--!                 layers = {
+--!                     {
+--!                         component = 2;
+--!                         color = "white";
+--!                     };
+--!                     {
+--!                         component = 1;
+--!                         color = "blue";
+--!                     };
+--!                 };
+--!                 active_layer = 2;
+--!             };
+--!         };
+--!     };
 --!     base_texture_file = "my_cat_mod_cat_base.png";
---!     initial_livery = cat_initial_livery;
 --! };
 --! @endcode
 
@@ -87,8 +112,8 @@
 --! Components available for @p livery_stack are defined in @p livery_definition.
 --!
 --! @p player is a player ObjectRef (optional).
---! @p livery_stack is a livery_stack.
 --! @p livery_definition is a livery_definition.
+--! @p livery_stack is a livery_stack.
 --! @p tool is the itemstack of the painting tool.
 --!
 --! @returns true if @p livery_stack was changed. Textures need to be updated then.
@@ -109,18 +134,28 @@ function multi_component_liveries.paint_on_livery(player, livery_definition, liv
         -- Meta painting commands consist of the G and B component.
         if g == 0 and b == 0 then
             -- Help text requested.
+            multi_component_liveries.initialize_stack(livery_definition, livery_stack);
             multi_component_liveries.send_player_help_message(playername, livery_stack, livery_definition, a);
             return false;
-        elseif g == 0 then
-            -- Undefined meta color painted.
-            multi_component_liveries.handle_undefined_metacolor(playername, a);
+        elseif g == 0 and b >= 1 and b <= 30 then
+            -- Load livery from slot
+            local slot = b;
+            return multi_component_liveries.load_from_slot(playername, livery_stack, slot, a);
+        elseif g == 0 and b >= 101 and b <= 130 then
+            -- Save livery to slot
+            local slot = b - 100;
+            multi_component_liveries.save_to_slot(playername, livery_stack, slot, a);
             return false;
-        elseif g <= 254 then
+        elseif g == 0 and b >= 201 and b <= 250 then
+            -- Load livery from preset
+            local preset = b - 200;
+            return multi_component_liveries.load_from_preset(playername, livery_stack, livery_definition, preset, a);
+        elseif g >= 1 and g <= 254 then
             -- Livery component selection requested.
             multi_component_liveries.initialize_stack(livery_definition, livery_stack);
             local component = g;
             local layer = b;
-            return multi_component_liveries.select_livery_component(playername, livery_stack, livery_definition, component, layer);
+            return multi_component_liveries.select_livery_component(playername, livery_stack, livery_definition, component, layer, a);
         else
             -- Undefined meta color painted.
             multi_component_liveries.handle_undefined_metacolor(playername, a);
@@ -129,7 +164,7 @@ function multi_component_liveries.paint_on_livery(player, livery_definition, liv
     else
         -- Non-meta color painted.
         multi_component_liveries.initialize_stack(livery_definition, livery_stack);
-        return multi_component_liveries.paint_active_layer(playername, livery_stack, string.format("#%02x%02x%02x", r, g, b));
+        return multi_component_liveries.paint_active_layer(playername, livery_stack, string.format("#%02x%02x%02x", r, g, b), a);
     end
 end
 

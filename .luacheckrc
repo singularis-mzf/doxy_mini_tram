@@ -43,4 +43,5 @@ read_globals = {
     "assert";
     "setup";
     "teardown";
+    "before_each";
 };
