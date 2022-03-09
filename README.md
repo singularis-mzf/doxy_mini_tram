@@ -8,7 +8,11 @@ SPDX-License-Identifier: MIT
 
 This mod adds a Minitram Konstal 105 train model to `advtrains`, which is a scaled down variant of the Konstal 105N tram.
 
-![Screenshot of the Minitram Konstal 105 in preliminary livery.](screenshot.png)
+![Screenshot of the Minitram Konstal 105 in default livery.](screenshot.png)
+
+![All included liveries for the Minitram Konstal 105.](screenshots/screenshot_1.png)
+
+![Panoramic view from the inside of Minitram Konstal 105.](screenshots/screenshot_2.png)
 
 ## About
 

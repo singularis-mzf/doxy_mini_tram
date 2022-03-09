@@ -517,7 +517,7 @@ With a double space character, a line break can be displayed.
 Line breaks with double spaces also work in shaped blocks and in all display sections.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+3C+3CLine+20{sp}27+3E+3E+3B+20to+20{space}A+3B+20via{nl}B.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_details_+3C+3CLine+20+7Bsp+7D27+3E+3E+3B+20to+20+7Bspace+7DA+3B+20via+7Bnl+7DB.png" width="256"/></td><td>
 
 `<<Line {sp}27>>; to {space}A; via{nl}B`
 
@@ -527,7 +527,7 @@ To enter double spaces, you need to use _entities_.
 Entities can also be used for the line break.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+3C+3CLine+20{}28+3E+3E+3B+20to+20{space}A+3B+20via{NewLine}B.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_details_+3C+3CLine+20+7B+7D28+3E+3E+3B+20to+20+7Bspace+7DA+3B+20via+7BNewLine+7DB.png" width="256"/></td><td>
 
 `<<Line {}28>>; to {space}A; via{NewLine}B`
 
@@ -536,7 +536,7 @@ Entities can also be used for the line break.
 Empty entities are considered invalid syntax, and appear as-is.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number__+3C{underscore}{lt}29{gt}{us}+3E_.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_number__+3C+7Bunderscore+7D+7Blt+7D29+7Bgt+7D+7Bus+7D+3E_.png" width="256"/></td><td>
 
 `_<{underscore}{lt}29{gt}{us}>_`
 
@@ -545,7 +545,7 @@ Empty entities are considered invalid syntax, and appear as-is.
 Entities can be used to escape any character which is relevant for syntax.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_30+3B+20K{ouml}ln.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_30+3B+20K+7Bouml+7Dln.png" width="256"/></td><td>
 
 `30; K{ouml}ln`
 
@@ -554,7 +554,7 @@ Entities can be used to escape any character which is relevant for syntax.
 Most HTML 4 entities are supported.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_31+3B+20{OpenCurlyDoubleQuote}Island{CloseCurlyDoubleQuote}.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_31+3B+20+7BOpenCurlyDoubleQuote+7DIsland+7BCloseCurlyDoubleQuote+7D.png" width="256"/></td><td>
 
 `31; {OpenCurlyDoubleQuote}Island{CloseCurlyDoubleQuote}`
 
@@ -563,7 +563,7 @@ Most HTML 4 entities are supported.
 HTML 5 entities are supported where `font_metro` has the relevant glyph.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_32+3B+20{num}+20{sharp}.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_32+3B+20+7Bnum+7D+20+7Bsharp+7D.png" width="256"/></td><td>
 
 `32; {num} {sharp}`
 
@@ -572,7 +572,7 @@ HTML 5 entities are supported where `font_metro` has the relevant glyph.
 `font_metro` does not have a &sharp; glyph, therefore the entity is passed through as-is.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_33+3B+20No+20{+2332}line{+23x20}+20breaks.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_33+3B+20No+20+7B+2332+7Dline+7B+23x20+7D+20breaks.png" width="256"/></td><td>
 
 `33; No {#32}line{#x20} breaks`
 
@@ -585,7 +585,7 @@ If the glyph is not available in `font_metro`, you will see a replacement sign.
 Numeric entities may be used to access additional glyphs, which were placed by other mods in the _Private Use Area_ of `font_metro`.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_34+3B+20{+2308216}Island{+23x002019}.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_34+3B+20+7B+2308216+7DIsland+7B+23x002019+7D.png" width="256"/></td><td>
 
 `34; {#08216}Island{#x002019}`
 
@@ -594,7 +594,7 @@ Numeric entities may be used to access additional glyphs, which were placed by o
 Numeric entities may have leading zeroes.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C{background+3A+23ffffff}35+3E+3E+3B+20{text+3A+23ffaa00}Orange.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C+7Bbackground+3A+23ffffff+7D35+3E+3E+3B+20+7Btext+3A+23ffaa00+7DOrange.png" width="256"/></td><td>
 
 `<<{background:#ffffff}35>>; {text:#ffaa00}Orange`
 
@@ -605,7 +605,7 @@ _Color brace sequences_ may be used to explicitly set individual colors.
 The color needs to be a HTML-like hexadecimal color with 3 or 6 digits.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C{b+3A+23000}36+3E+3E+3B+20{t+3A+23ffaa00}Orange.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C+7Bb+3A+23000+7D36+3E+3E+3B+20+7Bt+3A+23ffaa00+7DOrange.png" width="256"/></td><td>
 
 `<<{b:#000}36>>; {t:#ffaa00}Orange`
 
@@ -615,7 +615,7 @@ Color brace sequences can be identified with short abbreviations.
 See the reference section for them.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C37+3E+3E{b+3A+2300f}+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C37+3E+3E+7Bb+3A+2300f+7D+3B+20Text.png" width="256"/></td><td>
 
 `<<37>>{b:#00f}; Text`
 
@@ -624,7 +624,7 @@ See the reference section for them.
 The last background color of the number section will be used as display background color.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_{b+3A+2300f}+3C+3C38+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+7Bb+3A+2300f+7D+3C+3C38+3E+3E+3B+20Text.png" width="256"/></td><td>
 
 `{b:#00f}<<38>>; Text`
 
@@ -633,7 +633,7 @@ The last background color of the number section will be used as display backgrou
 Color brace sequences outside of shaped blocks propagate to all following blocks.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C39+3E+3E{t+3A+2300f}+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C39+3E+3E+7Bt+3A+2300f+7D+3B+20Text.png" width="256"/></td><td>
 
 `<<39>>{t:#00f}; Text`
 
@@ -642,7 +642,7 @@ Color brace sequences outside of shaped blocks propagate to all following blocks
 Another example for propagation of the color brace sequence.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_{t+3A+2300f}+3C+3C40+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+7Bt+3A+2300f+7D+3C+3C40+3E+3E+3B+20Text.png" width="256"/></td><td>
 
 `{t:#00f}<<40>>; Text`
 
@@ -651,7 +651,7 @@ Another example for propagation of the color brace sequence.
 Another example for propagation of the color brace sequence.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_{all+3A1}+3C+3C41+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+7Ball+3A1+7D+3C+3C41+3E+3E+3B+20Text.png" width="256"/></td><td>
 
 `{all:1}<<41>>; Text`
 
@@ -663,7 +663,7 @@ If the line is identified as string, it needs to be given in double quotes.
 The builtin lines are identified as integer.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C42+3E+3E+3B+20_+5BSome+5D_+20{a+3A1}+20_+5BText+5D_.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C42+3E+3E+3B+20_+5BSome+5D_+20+7Ba+3A1+7D+20_+5BText+5D_.png" width="256"/></td><td>
 
 `<<42>>; _[Some]_ {a:1} _[Text]_`
 
@@ -672,7 +672,7 @@ The builtin lines are identified as integer.
 Again, the color scheme is only applied to following blocks.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C{b+3A+2242+22}43+3E+3E+3B+20{t+3A+2239+22}Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+3C+3C+7Bb+3A+2242+22+7D43+3E+3E+3B+20+7Bt+3A+2239+22+7DText.png" width="256"/></td><td>
 
 `<<{b:\"42\"}43>>; {t:\"39\"}Text`
 
@@ -686,7 +686,7 @@ Even if the identifier of the color brace sequence is not `background` or `b`, t
 Here it can be seen that color brace sequences in shaped blocks are applied only to that block.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B44+5D+5D+3B+20{t+3A+230ff}+20+28+28some+29+29+20+28+28text+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+5B+5B44+5D+5D+3B+20+7Bt+3A+230ff+7D+20+28+28some+29+29+20+28+28text+29+29.png" width="256"/></td><td>
 
 `[[44]]; {t:#0ff} ((some)) ((text))`
 
@@ -695,7 +695,7 @@ Here it can be seen that color brace sequences in shaped blocks are applied only
 Another example for propagation of the color brace sequence.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B45+5D+5D+3B+20{t+3A+230ff}+20+28+28some+29+29+20{t+3A}+20+28+28text+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+5B+5B45+5D+5D+3B+20+7Bt+3A+230ff+7D+20+28+28some+29+29+20+7Bt+3A+7D+20+28+28text+29+29.png" width="256"/></td><td>
 
 `[[45]]; {t:#0ff} ((some)) {t:} ((text))`
 
@@ -708,7 +708,7 @@ This works fine for the text color.
 Because line color schemes are usually defined by the background color, deleting the background color usually deletes the whole color scheme.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_-+7C+5B+5B{secondary_background+3A+23000}46+5D+5D+3B+20-+7C+5B+5B46+5D+5D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_-+7C+5B+5B+7Bsecondary_background+3A+23000+7D46+5D+5D+3B+20-+7C+5B+5B46+5D+5D.png" width="256"/></td><td>
 
 `-|[[{secondary_background:#000}46]]; -|[[46]]`
 
@@ -721,7 +721,7 @@ For bright green background, the text would be black.
 But after setting the secondary background color to black, black text would no longer be readable.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B47+5D+5D+3B+20{broken+3A+23123}+20color+20brace+20sequence.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+5B+5B47+5D+5D+3B+20+7Bbroken+3A+23123+7D+20color+20brace+20sequence.png" width="256"/></td><td>
 
 `[[47]]; {broken:#123} color brace sequence`
 
@@ -730,7 +730,7 @@ But after setting the secondary background color to black, black text would no l
 Color brace sequences with invalid identifiers are considered invalid syntax, and are passed through as-is.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B48+5D+5D+3B+20{b+3A+231234}+20broken+20color+20brace+20sequence.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+5B+5B48+5D+5D+3B+20+7Bb+3A+231234+7D+20broken+20color+20brace+20sequence.png" width="256"/></td><td>
 
 `[[48]]; {b:#1234} broken color brace sequence`
 
@@ -769,7 +769,7 @@ Features need to span the entire block.
 In case of shapeless blocks, it would be possible to use no-op color brace sequnces to split the shapeless block.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B52+5D+5D+3B+20+28+28No+20+5B+5Bnested+5D+5D+20{{blocks}}+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_text_+5B+5B52+5D+5D+3B+20+28+28No+20+5B+5Bnested+5D+5D+20+7B+7Bblocks+7D+7D+29+29.png" width="256"/></td><td>
 
 `[[52]]; ((No [[nested]] {{blocks}}))`
 
