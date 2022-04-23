@@ -78,6 +78,7 @@ local function get_task(index)
         return nil;
     end
 
+    local short_description = string.gsub(test[1], " ", "_");
     local display_string_input = test[2];
     local max_width = test[4][1];
     local height = test[4][2];
@@ -100,7 +101,7 @@ local function get_task(index)
         display_string_input
     );
 
-    local png_file_name = image_directory .. "display_" .. level .. "_" .. escape_string(display_string_input) .. ".png";
+    local png_file_name = image_directory .. "display_" .. index .. "_" .. escape_string(short_description) .. "_" .. level .. ".png";
 
     return texture_string, png_file_name;
 end

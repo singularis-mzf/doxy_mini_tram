@@ -2,31 +2,56 @@
 --
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
 
-local section_end_characters = {
-    ["\n"] = true;
-    [";"] = true;
-};
-
---! Returns whether @p block ends a display section,
---! and in that case returns the visible text of the block,
---! or nil if it is not visible.
+--! Splits the text_block_description @p block at section break characters.
 --!
---! @returns ends_section; visible_part or nil.
-function visual_line_number_displays.ends_section(block)
-    -- TODO I believe all semicolon blocks are exactly ";" anyway.
-    if block.background_shape then
-        -- Shaped blocks never end sections.
-        return false;
-    elseif section_end_characters[string.sub(block.text, -1)] then
-        -- Shapeless block ends in certain character. Remove that character.
-        local text = string.sub(block.text, 1, -2);
-        if text ~= "" then
-            return true, text;
-        else
-            return true, nil;
-        end
+--! If such a character is present, returns two new blocks.
+function visual_line_number_displays.split_at_section_break(block)
+    if not block.braceless then
+        return nil;
+    end
+
+    local newline = string.find(block.text, "\n", 1, --[[ plain ]] true);
+    local semicolon = string.find(block.text, ";", 1, --[[ plain ]] true);
+
+    local section_break;
+    if newline and semicolon then
+        section_break = math.min(newline, semicolon);
     else
-        return false;
+        section_break = newline or semicolon;
+    end
+
+    if section_break then
+        local left = {
+            text = string.sub(block.text, 1, section_break - 1);
+            features = {};
+            braceless = true;
+        };
+        local right = {
+            text = string.sub(block.text, section_break + 1);
+            features = {};
+            braceless = true;
+        };
+
+        return left, right;
+    else
+        return nil;
+    end
+end
+
+--! Trims whitespace from braceless blocks
+--! in the text_block_desctiption list @p blocks.
+function visual_line_number_displays.simplify_braceless_blocks(blocks)
+    local i = 1;
+    while i <= #blocks do
+        if blocks[i].braceless then
+            blocks[i].text = string.trim(blocks[i].text);
+            if blocks[i].text == "" then
+                table.remove(blocks, i);
+                i = i - 1;
+            end
+        end
+
+        i = i + 1;
     end
 end
 
@@ -39,6 +64,9 @@ end
 --! @returns number_blocks, text_blocks, details_blocks,
 --! which are lists of text_block_description tables; and background_color.
 function visual_line_number_displays.parse_display_string(input)
+    -- Parse escape sequences
+    input = visual_line_number_displays.parse_escapes(input);
+
     -- Parse macro syntax
     for _ = 1, 4 do
         local result, continue = visual_line_number_displays.parse_macros(input);
@@ -56,30 +84,33 @@ function visual_line_number_displays.parse_display_string(input)
     local text_blocks = {};
     local details_blocks = {};
 
-    do
-        local block = 1;
-        for _, section in ipairs({ number_blocks, text_blocks }) do
-            while block <= #block_list do
-                local is_end, visible_text = visual_line_number_displays.ends_section(block_list[block]);
-                if is_end and visible_text then
-                    block_list[block].text = visible_text;
-                    table.insert(section, block_list[block]);
-                    block = block + 1;
-                    break;
-                elseif is_end then
-                    block = block + 1;
-                    break;
+    local sections = { number_blocks, text_blocks, details_blocks };
+    local section = 1;
+    for _, block in ipairs(block_list) do
+        local left, right = visual_line_number_displays.split_at_section_break(block);
+        if left then
+            while true do
+                table.insert(sections[section], left);
+                section = math.min(section + 1, 3);
+
+                -- One braceless block can contain more than one section break.
+                local next_left, next_right = visual_line_number_displays.split_at_section_break(right);
+                if next_left then
+                    left, right = next_left, next_right;
                 else
-                    table.insert(section, block_list[block]);
-                    block = block + 1;
+                    table.insert(sections[section], right);
+                    break;
                 end
             end
-        end
-
-        for i = block, #block_list do
-            table.insert(details_blocks, block_list[i]);
+        else
+            table.insert(sections[section], block);
         end
     end
+
+    -- Remove leftover whitespace from section breaks
+    visual_line_number_displays.simplify_braceless_blocks(number_blocks);
+    visual_line_number_displays.simplify_braceless_blocks(text_blocks);
+    visual_line_number_displays.simplify_braceless_blocks(details_blocks);
 
     -- Parse various syntax features in blocks
     visual_line_number_displays.parse_line_breaks_in_blocks(number_blocks);
@@ -109,7 +140,7 @@ function visual_line_number_displays.parse_display_string(input)
         for _, block in ipairs(blocks) do
             if block.background_color == display_background_color then
                 local shape = block.background_shape;
-                if shape and (not string.find(shape, "_outlined", 1, --[[ plain ]] true)) then
+                if shape and (string.sub(shape, -9) ~= "_outlined") then
                     display_background_color = visual_line_number_displays.shade_background_color(display_background_color);
                     break;
                 end

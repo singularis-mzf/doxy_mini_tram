@@ -45,6 +45,7 @@ describe("parse_display_string()", function()
             {
                 text = "1";
                 features = {};
+                braceless = true;
                 required_size = wh(5, 8);
                 text_size = wh(5, 8);
             };
@@ -56,7 +57,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses usual line numbers 1", function()
-        local number, text, details = pds("[[1]]\nZürich\nüber Basel");
+        local number, text, details = pds("{square|1}\nZürich\nüber Basel");
 
         local number_reference = {
             {
@@ -72,6 +73,7 @@ describe("parse_display_string()", function()
             {
                 text = "Zürich";
                 features = {};
+                braceless = true;
                 required_size = wh(35, 8);
                 text_size = wh(35, 8);
             };
@@ -81,6 +83,7 @@ describe("parse_display_string()", function()
             {
                 text = "über Basel";
                 features = {};
+                braceless = true;
                 required_size = wh(55, 8);
                 text_size = wh(55, 8);
             };
@@ -92,7 +95,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses usual line numbers 2", function()
-        local number, text, details = pds("[[1]]; Zürich; über Basel");
+        local number, text, details = pds("{square|1}; {Zürich}; {über Basel}");
 
         local number_reference = {
             {
@@ -128,7 +131,7 @@ describe("parse_display_string()", function()
     end);
 
     it("parses complex line numbers", function()
-        local number, text, details = pds("\\/<<RE1>>; Köln HBF [[U]] ((S))\nüber: ((S)) Chorweiler  {lpar}tief{rpar}");
+        local number, text, details = pds("{diamond|left_right|RE1}; Köln HBF {square|U} {round|S}\nüber: {round|S} Chorweiler  {lpar}tief{rpar}");
 
         local number_reference = {
             {
@@ -145,6 +148,7 @@ describe("parse_display_string()", function()
             {
                 text = "Köln HBF";
                 features = {};
+                braceless = true;
                 required_size = wh(45, 8);
                 text_size = wh(45, 8);
             };
@@ -168,6 +172,7 @@ describe("parse_display_string()", function()
             {
                 text = "über:";
                 features = {};
+                braceless = true;
                 required_size = wh(30, 8);
                 text_size = wh(30, 8);
             };
@@ -181,6 +186,7 @@ describe("parse_display_string()", function()
             {
                 text = "Chorweiler\n(tief)";
                 features = {};
+                braceless = true;
                 required_size = wh(50, 16);
                 text_size = wh(50, 16);
             };
@@ -255,6 +261,6 @@ describe("render_displays()", function()
             }};
         };
 
-        assert.same("base.png^[resize:128x128^[combine:128x128:0,4={vlnd_pixel.png^[multiply:#998314^[resize:24x24^[combine:24x22:2,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:8,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "_(16)_\\/"));
+        assert.same("base.png^[resize:128x128^[combine:128x128:0,4={vlnd_pixel.png^[multiply:#998314^[resize:24x24^[combine:24x22:2,2={[combine:20x20:0,0={vlnd_circle.png^[resize:20x20}:2,2={vlnd_circle.png^[resize:16x16^[multiply:#998314^(vlnd_x.png^[resize:16x16^[mask:{vlnd_circle.png^[resize:16x16}^[multiply:#ffaaff)}}:8,8={[combine:10x8:0,0=16.png^[colorize:#ffffff}}", rd(display_description, "{_()_|upper_lower|16}"));
     end);
 end);

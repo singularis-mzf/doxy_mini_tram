@@ -19,53 +19,62 @@ This property uses _display string syntax_, which is described here.
 
 A display string may be just a number, but it may also use these syntax features.
 
-#### Shaped blocks
+#### Brace blocks
 
-Sections of text may be enclosed in a _shaped background block_.
+Sections of text may be enclosed in a _brace block_.
+
+Brace blocks have the format `{a|b|c|...}`, with any number of parts separated by bar characters.
+Usually, the last part is used as text that is rendered, and the other parts specify options.
+
+#### Background shapes
+
+Brace block options can be used to enclose text in a _shaped background block_.
 
 There are square (rectangular), round, and diamond shaped block.
-A section of text is enclosed in such a block by enclosing it in double brackets.
-The outer bracket pair may be replaced to give the block an additional thin outline.
 
-These background shapes are available:
+These background shape options are available:
 
- * `[[Text on square background]]`
- * `((Text on round background))`
- * `<<Text on diamond background>>`
- * `_[Text in square outline]_`
- * `_(Text in round outline)_`
- * `_<Text in diamond outline>_`
+ * `[]` or `square`
+ * `()` or `round`
+ * `<>` or `diamond`
+ * `_[]_` or `square_outlined`
+ * `_()_` or `round_outlined`
+ * `_<>_` or `diamond_outlined`
 
-It is not possible to nest blocks.
+Example: `{()|This text has an oval background}`
 
-Text which is not enclosed in a bracket pair is called a _shapeless block_.
+It is not possible to nest text blocks.
+
+Brace blocks without a background shape option may be called _shapeless block_.
 
 #### Background patterns
 
 Shaped blocks are usually drawn in the current _background color_.
 There is also a _secondary background color_, which is used for _background patterns_.
 
-A background pattern is added to a shaped block by writing a short character sequence directly before the double brackets of the shaped block.
+A background pattern can be added to a shaped block by adding one brace block option.
 
-Background patterns can also be used with outlined shaped blocks.
-Then the pattern sequence is written before the underscore.
+Background patterns are identified by the background halves or quarters which are drawn in the secondary background color.
+The halves and quarters have names like `left`, `lower`, `upper_left`, ...
+The digits 1 to 4 can be used for the corners, using the _BSicon_ corner numbering scheme.
 
-These pattern sequences are available:
+These background pattern options are available:
 
- * `-`
- * `/`
- * `|`
- * `\`
- * `-|`
- * `\/`
+ * `left`
+ * `right`
+ * `upper`
+ * `lower`
+ * `upper_left` or `4`
+ * `upper_right` or `1`
+ * `lower_left` or `3`
+ * `lower_right` or `2`
+ * `upper_left_lower_right` or `24`
+ * `upper_right_lower_left` or `13`
+ * `left_right`
+ * `upper_lower`
 
-The lines indicate in which direction the color separation line(s) will go.
+Example: `{()|4|This} goes in a circle with the upper left half in the secondary background color.`
 
-Example: `|((Left and right halves))`
-
-The two colors can be swapped by writing the sequence after the block instead of before the block.
-
-Example: `_(Right and left halves)_|`
 
 #### Display sections
 
@@ -75,7 +84,7 @@ A display has up to three sections:
  * _Text_ section, shown on the right.
  * _Details_ section, shown below the text section in smaller font.
 
-The display string advances to the next section when a semicolon or line break (outside a shaped block) is encountered.
+The display string advances to the next section when a semicolon or line break (outside a brace block) is encountered.
 
 An `advtrains` wagon definition may restrict individual displays to certain sections.
 The other sections are then not shown on these displays.
@@ -89,29 +98,28 @@ As described above, line breaks using the line break character separate differen
 
 To get a line break within a shaped or shapeless block, you can use a double space or an _entity_.
 
-Example: `Two  lines [[and{NewLine}three{nl}lines]]`
+Example: `{Two  lines} {and{NewLine}three{nl}lines}`
 
 #### Text features
 
-Strokes can be applied to any text block by writing a certain character directly before or after the text.
-In case of a shaped block, this character goes inside the bracket pair.
+Text features are strokes drawn on or under the text glyphs.
 
-These features are available:
+Features can be applied to any brace block by adding any of these options.
 
- * `/`
- * `|`
- * `\`
+Diagonal strokes are identified by their BSicon corner digits.
 
-The line indicates in which direction the stroke line will go.
-In the case of `|`, a horizontal stroke is drawn.
-This allows to use `-` as usual text character.
+These feature options are available:
 
-If the character is written before the text, the stroke is drawn in the background.
-If it is written after the text, the stoke is drawn on top of the text, possibly obscuring it.
+ * `stroke_13_foreground` or `/`
+ * `stroke_foreground` or `-`
+ * `stroke_24_foreground`
+ * `stroke_13_background`
+ * `stroke_background`
+ * `stroke_24_background`
 
 _Text features_ can be used to make “stroked lines”.
 
-Example: `[[/12]]; North; (Express line)`
+Example: `{[]|/|12}; North; (Express line)`
 
 Text features use the _feature color_.
 
@@ -136,7 +144,7 @@ When a color is set explicitly, the other colors are recalculated automatically 
 
 It is possible to reference the background color of a certain line, by using the line identifier in double quotes.
 
-Example: `{background:"1"}{secondary_background:"2"}/((1-2 Combo Line))`
+Example: `{background:"1"}{secondary_background:"2"}{()|stroke_13_background|1-2 Combo Line}`
 
 It is possible to use the whole color scheme of another line with the `all` or `a` identifier.
 In this case, the line may be identified as string or as integer, which depends on the mod which defined that line.
@@ -145,20 +153,25 @@ The builtin subway wagon color schemes are identified as integer.
 Example with integer: `{all:1}[[101]]; Shuttle to Line 1`
 Example with string: `{a:"S1"}<<S101>>; Shuttle to Line S1`
 
-Color brace sequences may be used inside or outside of shaped blocks.
+Color brace sequences may be used inside or outside of brace blocks.
 
-If they are used inside, the colors are applied only to the whole shaped block.
+If they are used inside, the colors are applied only to the whole brace block.
 
-If they are used outside, the colors are applied to all following blocks and text.
+If they are used outside, i. e. in a _braceless block_, the colors are applied to all following blocks and text.
 If they are used inside a _shapeless block_, the shapeless block is split.
 
-Example inside shaped block: `{b:#000} [[{b:#0d0}Green square]] (({b:#f00}Red circle))`
-Example within shapeless block: `{t:#000} Black text {t:#f00} Red text`
+Example inside shaped blocks: `{b:#000} {[]|{b:#0d0}Green square} {[]|{b:#f00}Red circle}`
+Example inside shapeless blocks: `{{t:#000}Black text} {{t:#f00}Red text}`
+Example inside a braceless block: `{t:#000}Black text} {t:#f00}Red text`
+
+Inside a brace block, the color brace sequence may be turned into a brace block option.
+
+Example: `{t:#000|Black text} {[]|b:#0d0|Green square}`
 
 It is possible to “unset” a color which has been set explicitely before.
 This is done by not providing any color after the colon.
 
-Example: `[[1]]; White text {t:#f00} Red text {t:} White text`
+Example: `{[]|1}; White text {t:#f00} Red text {t:} White text`
 
 This causes the color to be calculated automatically.
 It is usually safe to do this for the text color.
@@ -172,7 +185,7 @@ They also allow to escape characters which would otherwise be considered part of
 
 Entities are written with their name in a single brace pair.
 
-Example: `{slash}12; This line begins with an actual slash, instead of being stroked.`
+Example: `{lcurl}12{rcurl}; This line is enclosed in braces.`
 
 These entities are provided:
  * `{`, `}`, `{{`, `}}`: lcurl, rcurl, llcurl, rrcurl
@@ -201,18 +214,30 @@ Like in HTML, the number encodes the codepoint, not the UTF-8 representation.
 
 Example: `Lots of{sp}white{#32}space{#x20}here.`
 
+Entities may be used within brace blocks.
+
+Example: `{[]|single {sp} line {sp} box}`
+
+#### Escaping with backslash
+
+Any character may be escaped with a backslash (including the backslash itself), to avoid them being interpreted as syntax.
+
+Example: `{[]|Box\|containing\|bar\|characters}`
+
+Escaping with backslash is usually a more straightforward alternative to entities.
+
 #### Macros
 
 _Macros_ work similar to entities, as they are replaced with another string.
-While entities are parsed as the last step, macros are parsed before everything else,
+While entities are parsed in the last step, macros are parsed very early,
 so macros may contain any other syntax (and even other macros).
 
 Like entities, macros are identified by their name, and are written with the name enclosed in single braces.
 
-Macros may receive an argument if their name ends with `=`.
-The argument is written directly after the macro name, and may contain any syntax, including other macros.
+Macros may receive arguments following their name, using the brace block syntax.
+Arguments may contain any syntax, including other macros.
 
-Example: `{Warning_Label=33  1202}` may turn into `_[{b:#d80}{t:#000}{f:#000}33  1202|]_`, which will look like the warning label for gasoline.
+Example: `{Warning_Label|33  1202}` may turn into `{_[]_|b:#d80|t:#000|f:#000|-|33  1202}`, which will look like the warning label for gasoline.
 
 There are no macros provided by default.
 Other mods may register their own macros.
@@ -227,8 +252,6 @@ This allows you to see where syntax is invalid.
 
 You can deliberately use invalid syntax to avoid using entities.
 Invalid syntax may often be considered “no syntax”, but still it is debatable whether this is good practice.
-
-Example: `(invalid_block))` is not valid block syntax, and will render the same as `{lpar}invalid_entity{rrpar}`.
 
 ### Display string syntax examples
 
@@ -246,7 +269,7 @@ The client will then render this texture, find a specialized `[save:` texture mo
 
 <table>
 <tr><th>Rendering</th><th>Display string input</th><th>Comments</th></tr>
-<tr><td><img src="screenshots/display_number_1.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_1_Single_digit_number.png" width="256"/></td><td>
 
 `1`
 
@@ -255,7 +278,7 @@ The client will then render this texture, find a specialized `[save:` texture mo
 Plain line numbers may be entered directly, as-is.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_2.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_2_Subway_wagon_colors_number.png" width="256"/></td><td>
 
 `2`
 
@@ -264,7 +287,7 @@ Plain line numbers may be entered directly, as-is.
 For single-digit decimal line numbers, the background color is taken from the `basic_trains` subway wagon’s color list.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_U3.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_3_Leading_non-digits_number.png" width="256"/></td><td>
 
 `U3`
 
@@ -273,7 +296,7 @@ For single-digit decimal line numbers, the background color is taken from the `b
 Line numbers may contain additional letters, the background color lookup uses only the digits (and optionally a minus sign).
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_4a.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_4_Trailing_non-digits_number.png" width="256"/></td><td>
 
 `4a`
 
@@ -282,22 +305,22 @@ Line numbers may contain additional letters, the background color lookup uses on
 Display strings as simple as these will result in a rectangular box, filled with the background color, with the text in the middle.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+5B+5B5+5D+5D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_5_Square_background_number.png" width="256"/></td><td>
 
-`[[5]]`
+`{square|5}`
 
 </td><td>
 
-With double square brackets, the text can be enclosed in a rectangular box.
+Using a _brace block_ with the option `square`, the text can be enclosed in a rectangular box.
 This is called a _shaped block_.
 
 The shaped block takes the color associated with this line.
 The display background is slightly shaded to make the box visible.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+28+28Line+29+29+20+3C+3C6+3E+3E.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_6_Round,_diamond_background_number.png" width="256"/></td><td>
 
-`((Line)) <<6>>`
+`{round|Line} {diamond|6}`
 
 </td><td>
 
@@ -308,9 +331,9 @@ It is possible to use more than one shaped block.
 The left block does not contain digits, and therefore does not affect the line color lookup.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number__+5BOutlined+5D_+20_+287th+29_+20_+3CLine+3E_.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_7_Outlined_background_number.png" width="256"/></td><td>
 
-`_[Outlined]_ _(7th)_ _<Line>_`
+`{square_outlined|Outlined} {round_outlined|7th} {diamond_outlined|Line}`
 
 </td><td>
 
@@ -320,22 +343,24 @@ The outline uses the text color.
 In this example, it is not necessary to shade the display background, because of the outlines.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C8+3E+3E+3B+20some+20Destination.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_8_Text_section_text.png" width="256"/></td><td>
 
-`<<8>>; some Destination`
+`{<>|8}; some Destination`
 
 </td><td>
+
+The background shape options are also available in symbolic forms `[]`, `()`, and `<>`.
 
 The semicolon advances to the next _display section_.
 There are three display sections, called _number_, _text_, and _details_.
 
-Here, the text “some destination” is only shown on displays that have the _text_ section enabled.
+Here, the text “some Destination” is only shown on displays that have the _text_ section enabled.
 Smaller displays may choose to show only the _number_ section.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+5B+5B9+5D+5D+0Asome+20Destination+0Avia+20+3C+3Csome+3E+3E+20stopover.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_9_Details_section_details.png" width="256"/></td><td>
 
-`[[9]]↵some Destination↵via <<some>> stopover`
+`{[]|9}↵some Destination↵via {<>|some} {stopover}`
 
 </td><td>
 
@@ -344,15 +369,18 @@ A line break does the same as a semicolon.
 
 The _details_ section is shown in a smaller font.
 
-There is a diamond shaped block in the details section.
+There are four text blocks in the details section.
+The text span “via ” is a _braceless block_.
+The text span “{stopover}” is a _brace block_.
 
-The text spans outside the shaped blocks are called _shapeless blocks_.
+Between “some” and “stopover” there is a space in a braceless block.
+Outer whitespace in braceless blocks is ignored, therefore that block has no meaning.
 
 Any section may contain any number of blocks.
 The texture resolution is increased automatically if necessary.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_10.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_10_Color_algorithm_number.png" width="256"/></td><td>
 
 `10`
 
@@ -361,144 +389,147 @@ The texture resolution is increased automatically if necessary.
 For line numbers with more than one digit (or negative numbers), the color hashing algorithm from the `basic_trains` subway wagon is used.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+2F11.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_11_Background_features_1_number.png" width="256"/></td><td>
 
-`/11`
+`{stroke_13_background|11}`
 
 </td><td>
 
-Any block may have _features_, which are strokes drawn above or under the text.
+Any brace block may have _features_, which are strokes drawn above or under the text.
 
 A slash before the text draws a stroke from the bottom-left to the top-right under the text.
 
 Such features may be used for “stroked lines”.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+5B+5B+5C12+5D+5D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_12_Background_features_2_number.png" width="256"/></td><td>
 
-`[[\12]]`
-
-</td><td>
-
-In the case of shaped blocks, the feature character is written inside of the double brackets.
-
-</td></tr>
-<tr><td><img src="screenshots/display_number_+5B+5B+7C13+5D+5D.png" width="256"/></td><td>
-
-`[[|13]]`
+`{[]|stroke_24_background|12}`
 
 </td><td>
 
-For a horizontal stroke, the vertical bar is used.
-This allows to use the minus sign as usual, just in case you have negative line numbers.
+Features can be used in shaped blocks too.
+They are just an additional option in the brace block.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+5B+5B14+2F+5D+5D+3B+20towards+20A+3B+20via+20B+7C.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_13_Background_features_3_number.png" width="256"/></td><td>
 
-`[[14/]]; towards A; via B|`
+`{stroke_background|[]|13}`
 
 </td><td>
 
-When the feature character comes after the text, the stroke is drawn on top of the text.
+The order of options in a brace block does not matter.
+Only the visible text needs to appear after the last `|` character.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_-+28+2815+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_14_Foreground_features_details.png" width="256"/></td><td>
 
-`-((15))`
+`{/|[]|14}; towards A; via {-|B}`
 
 </td><td>
 
-With character sequences outside the double brackets, _background patterns_ can be created.
-This works only for shaped blocks.
-
-A minus sign makes a horizontal separation line between the _background color_ and _secondary background color_.
-
-The secondary background color is calculated automatically from the background color, which is calculated from the line number.
+The options `/` and `-` are shortcuts for strokes in the foreground.
+They are useful for stroked lines.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+2F+28+2816+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_15_Background_patterns_1_number.png" width="256"/></td><td>
 
-`/((16))`
+`{()|upper|15}`
 
 </td><td>
 
-A slash makes a diagonal separation line.
+Shaped blocks can optionally have a background pattern.
+
+The option `upper` means that the upper part of the background is drawn in the secondary background color.
+
+The secondary background color is calculated automatically from the background color.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+7C+28+2817+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_16_Background_patterns_2_number.png" width="256"/></td><td>
 
-`|((17))`
+`{()|4|16}`
 
 </td><td>
 
-A vertical bar makes a vertical separation line.
+The digits 1 to 4 can be used to color one of the four background corners, with a diagonal separation line.
+
+The corners are numbered like in BSicons from Wikipedia.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+5C+28+2818+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_17_Background_patterns_3_number.png" width="256"/></td><td>
 
-`\((18))`
+`{lower_left|()|17}`
 
 </td><td>
 
-A backslash makes a diagonal separation line.
+Corners may also be named explicitly.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_-+7C+28+2819+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_18_Background_patterns_4_number.png" width="256"/></td><td>
 
-`-|((19))`
+`{left|round|18}`
 
 </td><td>
 
-Minus and vertical bar can be combined, which gives a plus shape.
+See the display string syntax reference for all background pattern options.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+5C+2F+28+2820+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_19_Background_patterns_5_number.png" width="256"/></td><td>
 
-`\/((20))`
+`{round|24|19}`
 
 </td><td>
 
-Backslash and slash give an X shape.
+Specifying two corners gives a plus shape.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+2F+28+2821+29+29+20+28+2821+29+29+2F.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_20_Background_patterns_6_number.png" width="256"/></td><td>
 
-`/((21)) ((21))/`
+`{()|left_right|20}`
 
 </td><td>
 
-When the background pattern sequence is written after the double brackets, the two colors are swapped.
+Similar for an X shape.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+7C-+28+2822+29+29+3B+3B+20+28+2822+29+29-+7C.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_21_Background_patterns_7_number.png" width="256"/></td><td>
 
-`|-((22));; ((22))-|`
+`{()|upper_left|21} {()|lower_right|21}`
+
+</td><td>
+
+Every background pattern has an inverse pattern.
+
+</td></tr>
+<tr><td><img src="screenshots/display_22_Background_patterns_8_details.png" width="256"/></td><td>
+
+`{upper_left_lower_right|()|22};; {upper_right_lower_left|()|22}`
 
 </td><td>
 
 Of course this works in all display sections...
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_+7C-_+2823+29_+20_+5B23+5D_-+7C.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_23_Background_patterns_9_number.png" width="256"/></td><td>
 
-`|-_(23)_ _[23]_-|`
+`{_()_|upper_left_lower_right|23} {_[]_|upper_right_lower_left|23}`
 
 </td><td>
 
 ...and with all background shapes.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number__+2824+29_+5C+2F+20+5C+2F_+3C24+3E_-+7C.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_24_Background_patterns_10_number.png" width="256"/></td><td>
 
-`_(24)_\/ \/_<24>_-|`
+`{_()_|upper_lower|24} {_<>_|left_right|upper_lower|24}`
 
 </td><td>
 
-Here, the second block has both `\/` and `-|` as pattern sequence.
-This is considered invalid syntax, and the second sequence is discarded.
+Here, the second block has both `left_right` and `upper_lower` as pattern options.
+This is considered invalid syntax, and the second option is passed through.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number_Line+20+2025.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_25_Double_space_line_breaks_1_number.png" width="256"/></td><td>
 
 `Line  25`
 
@@ -508,18 +539,18 @@ Remember that line breaks cause the display string to advance to the next displa
 With a double space character, a line break can be displayed.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+3C+3CLine+20+2026+3E+3E+3B+20to+20+20A+3B+20via+20+20B.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_26_Double_space_line_breaks_2_details.png" width="256"/></td><td>
 
-`<<Line  26>>; to  A; via  B`
+`{<>|Line  26}; to  A; {via  B}`
 
 </td><td>
 
-Line breaks with double spaces also work in shaped blocks and in all display sections.
+Line breaks with double spaces also work in brace blocks and in all display sections.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+3C+3CLine+20+7Bsp+7D27+3E+3E+3B+20to+20+7Bspace+7DA+3B+20via+7Bnl+7DB.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_27_Entities_1_details.png" width="256"/></td><td>
 
-`<<Line {sp}27>>; to {space}A; via{nl}B`
+`{<>|Line {sp}27}; to {space}A; {via{nl}B}`
 
 </td><td>
 
@@ -527,25 +558,28 @@ To enter double spaces, you need to use _entities_.
 Entities can also be used for the line break.
 
 </td></tr>
-<tr><td><img src="screenshots/display_details_+3C+3CLine+20+7B+7D28+3E+3E+3B+20to+20+7Bspace+7DA+3B+20via+7BNewLine+7DB.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_28_Entities_2_details.png" width="256"/></td><td>
 
-`<<Line {}28>>; to {space}A; via{NewLine}B`
+`{<>|Line {}28}; to {space}A; via{NewLine}B`
 
 </td><td>
 
-Empty entities are considered invalid syntax, and appear as-is.
+Empty entities are considered invalid syntax.
+Within another brace block, they appear as-is.
 
 </td></tr>
-<tr><td><img src="screenshots/display_number__+3C+7Bunderscore+7D+7Blt+7D29+7Bgt+7D+7Bus+7D+3E_.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_29_Entities_3_number.png" width="256"/></td><td>
 
-`_<{underscore}{lt}29{gt}{us}>_`
+`{_<>_|{bar}29\|}`
 
 </td><td>
 
 Entities can be used to escape any character which is relevant for syntax.
 
+It may be easier to escape such characters with a backslash.
+
 </td></tr>
-<tr><td><img src="screenshots/display_text_30+3B+20K+7Bouml+7Dln.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_30_HTML_4_entities_text.png" width="256"/></td><td>
 
 `30; K{ouml}ln`
 
@@ -554,7 +588,7 @@ Entities can be used to escape any character which is relevant for syntax.
 Most HTML 4 entities are supported.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_31+3B+20+7BOpenCurlyDoubleQuote+7DIsland+7BCloseCurlyDoubleQuote+7D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_31_HTML_5_entities_text.png" width="256"/></td><td>
 
 `31; {OpenCurlyDoubleQuote}Island{CloseCurlyDoubleQuote}`
 
@@ -563,16 +597,18 @@ Most HTML 4 entities are supported.
 HTML 5 entities are supported where `font_metro` has the relevant glyph.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_32+3B+20+7Bnum+7D+20+7Bsharp+7D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_32_Missing_glyph_entities_text.png" width="256"/></td><td>
 
-`32; {num} {sharp}`
+`32; {{num} {sharp}}`
 
 </td><td>
 
 `font_metro` does not have a &sharp; glyph, therefore the entity is passed through as-is.
 
+Outside the brace block, this entity would turn into a brace block itself.
+
 </td></tr>
-<tr><td><img src="screenshots/display_text_33+3B+20No+20+7B+2332+7Dline+7B+23x20+7D+20breaks.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_33_Numeric_entities_1_text.png" width="256"/></td><td>
 
 `33; No {#32}line{#x20} breaks`
 
@@ -585,7 +621,7 @@ If the glyph is not available in `font_metro`, you will see a replacement sign.
 Numeric entities may be used to access additional glyphs, which were placed by other mods in the _Private Use Area_ of `font_metro`.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_34+3B+20+7B+2308216+7DIsland+7B+23x002019+7D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_34_Numeric_entities_2_text.png" width="256"/></td><td>
 
 `34; {#08216}Island{#x002019}`
 
@@ -594,9 +630,9 @@ Numeric entities may be used to access additional glyphs, which were placed by o
 Numeric entities may have leading zeroes.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C+7Bbackground+3A+23ffffff+7D35+3E+3E+3B+20+7Btext+3A+23ffaa00+7DOrange.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_35_Color_brace_sequences_1_text.png" width="256"/></td><td>
 
-`<<{background:#ffffff}35>>; {text:#ffaa00}Orange`
+`{<>|{background:#ffffff}35}; {text:#ffaa00}Orange`
 
 </td><td>
 
@@ -605,55 +641,57 @@ _Color brace sequences_ may be used to explicitly set individual colors.
 The color needs to be a HTML-like hexadecimal color with 3 or 6 digits.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C+7Bb+3A+23000+7D36+3E+3E+3B+20+7Bt+3A+23ffaa00+7DOrange.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_36_Color_brace_sequences_2_text.png" width="256"/></td><td>
 
-`<<{b:#000}36>>; {t:#ffaa00}Orange`
+`{<>|b:#000|36}; {t:#ffaa00}Orange`
 
 </td><td>
 
 Color brace sequences can be identified with short abbreviations.
 See the reference section for them.
 
-</td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C37+3E+3E+7Bb+3A+2300f+7D+3B+20Text.png" width="256"/></td><td>
+They can also be written as options for brace blocks.
 
-`<<37>>{b:#00f}; Text`
+</td></tr>
+<tr><td><img src="screenshots/display_37_Color_brace_sequences_3_text.png" width="256"/></td><td>
+
+`{<>|37}{b:#00f}; Text`
 
 </td><td>
 
 The last background color of the number section will be used as display background color.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+7Bb+3A+2300f+7D+3C+3C38+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_38_Color_brace_sequences_4_text.png" width="256"/></td><td>
 
-`{b:#00f}<<38>>; Text`
-
-</td><td>
-
-Color brace sequences outside of shaped blocks propagate to all following blocks.
-
-</td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C39+3E+3E+7Bt+3A+2300f+7D+3B+20Text.png" width="256"/></td><td>
-
-`<<39>>{t:#00f}; Text`
+`{b:#00f}{<>|38}; Text`
 
 </td><td>
 
-Another example for propagation of the color brace sequence.
+Color brace sequences outside of brace blocks propagate to all following blocks.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+7Bt+3A+2300f+7D+3C+3C40+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_39_Color_brace_sequences_5_text.png" width="256"/></td><td>
 
-`{t:#00f}<<40>>; Text`
+`{<>|39}{t:#00f}; Text`
 
 </td><td>
 
 Another example for propagation of the color brace sequence.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+7Ball+3A1+7D+3C+3C41+3E+3E+3B+20Text.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_40_Color_brace_sequences_6_text.png" width="256"/></td><td>
 
-`{all:1}<<41>>; Text`
+`{t:#00f}{<>|40}; Text`
+
+</td><td>
+
+Another example for propagation of the color brace sequence.
+
+</td></tr>
+<tr><td><img src="screenshots/display_41_+E2+80+9Call+E2+80+9D_color_brace_sequence_1_text.png" width="256"/></td><td>
+
+`{all:1}{<>|41}; Text`
 
 </td><td>
 
@@ -663,18 +701,18 @@ If the line is identified as string, it needs to be given in double quotes.
 The builtin lines are identified as integer.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C42+3E+3E+3B+20_+5BSome+5D_+20+7Ba+3A1+7D+20_+5BText+5D_.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_42_+E2+80+9Call+E2+80+9D_color_brace_sequence_2_text.png" width="256"/></td><td>
 
-`<<42>>; _[Some]_ {a:1} _[Text]_`
+`{<>|42}; {_[]_|Some} {a:1} {_[]_|Text}`
 
 </td><td>
 
 Again, the color scheme is only applied to following blocks.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+3C+3C+7Bb+3A+2242+22+7D43+3E+3E+3B+20+7Bt+3A+2239+22+7DText.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_43_Referencing_color_brace_sequences_text.png" width="256"/></td><td>
 
-`<<{b:\"42\"}43>>; {t:\"39\"}Text`
+`{<>|{b:\"42\"}43}; {t:\"39\"|Text}`
 
 </td><td>
 
@@ -686,18 +724,18 @@ Even if the identifier of the color brace sequence is not `background` or `b`, t
 Here it can be seen that color brace sequences in shaped blocks are applied only to that block.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B44+5D+5D+3B+20+7Bt+3A+230ff+7D+20+28+28some+29+29+20+28+28text+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_44_Explicit_colors_text.png" width="256"/></td><td>
 
-`[[44]]; {t:#0ff} ((some)) ((text))`
+`{[]|44}; {t:#0ff} {()|some} {()|text}`
 
 </td><td>
 
 Another example for propagation of the color brace sequence.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B45+5D+5D+3B+20+7Bt+3A+230ff+7D+20+28+28some+29+29+20+7Bt+3A+7D+20+28+28text+29+29.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_45_Deleting_explicit_colors_1_text.png" width="256"/></td><td>
 
-`[[45]]; {t:#0ff} ((some)) {t:} ((text))`
+`{[]|45}; {t:#0ff} {()|some} {t:} {()|text}`
 
 </td><td>
 
@@ -708,9 +746,9 @@ This works fine for the text color.
 Because line color schemes are usually defined by the background color, deleting the background color usually deletes the whole color scheme.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_-+7C+5B+5B+7Bsecondary_background+3A+23000+7D46+5D+5D+3B+20-+7C+5B+5B46+5D+5D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_46_Deleting_explicit_colors_2_text.png" width="256"/></td><td>
 
-`-|[[{secondary_background:#000}46]]; -|[[46]]`
+`{upper_left_lower_right|[]|secondary_background:#000|46}; {upper_left_lower_right|[]|46}`
 
 </td><td>
 
@@ -721,89 +759,44 @@ For bright green background, the text would be black.
 But after setting the secondary background color to black, black text would no longer be readable.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B47+5D+5D+3B+20+7Bbroken+3A+23123+7D+20color+20brace+20sequence.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_47_Syntax_errors_1_text.png" width="256"/></td><td>
 
-`[[47]]; {broken:#123} color brace sequence`
+`{[]|47}; {{broken:#123} color} {brace:sequences}`
 
 </td><td>
 
 Color brace sequences with invalid identifiers are considered invalid syntax, and are passed through as-is.
+Outside of brace blocks, they turn into brace blocks themselves.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B48+5D+5D+3B+20+7Bb+3A+231234+7D+20broken+20color+20brace+20sequence.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_48_Syntax_errors_2_text.png" width="256"/></td><td>
 
-`[[48]]; {b:#1234} broken color brace sequence`
+`{[]|48}; {t:#1234} broken color brace sequence`
 
 </td><td>
 
-Same for invalid color codes.
+Similar for invalid color codes.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B49+5D+5D+3B+20+5B_wrong_+5D+20+5B+28blocks+29+5D.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_49_Syntax_errors_3_text.png" width="256"/></td><td>
 
-`[[49]]; [_wrong_] [(blocks)]`
+`{[]|49}}; {_[]|wrong} {{}|blocks}`
 
 </td><td>
 
-These double bracket pairs are passed through as-is, because no background shape is defined for them.
+Invalid brace block options are passed through as-is too.
+For example, there is no background shape identified by `{}`.
 
 </td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B50+5D+5D+3B+20+28single+29+20+5Bbrackets+5D+20+3Cwork+3E.png" width="256"/></td><td>
+<tr><td><img src="screenshots/display_50_Syntax_errors_4_text.png" width="256"/></td><td>
 
-`[[50]]; (single) [brackets] <work>`
+`{[]|50}; {No {<>|nested blocks}}`
 
 </td><td>
 
-Because shaped blocks use double bracket pairs, you can use single brackets (except braces) just fine.
+Blocks can not be nested, and this attempt is passed through as-is.
 
-</td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B51+5D+5D+3B+20features+20+7C+20in+20+2F+20text.png" width="256"/></td><td>
-
-`[[51]]; features | in / text`
-
-</td><td>
-
-You can not use text features in the middle of any block.
-Features need to span the entire block.
-
-In case of shapeless blocks, it would be possible to use no-op color brace sequnces to split the shapeless block.
-
-</td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B52+5D+5D+3B+20+28+28No+20+5B+5Bnested+5D+5D+20+7B+7Bblocks+7D+7D+29+29.png" width="256"/></td><td>
-
-`[[52]]; ((No [[nested]] {{blocks}}))`
-
-</td><td>
-
-Shaped blocks can not be nested.
-
-</td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B53+5D+5D+3B+20cut+20off+20+28+28block.png" width="256"/></td><td>
-
-`[[53]]; cut off ((block`
-
-</td><td>
-
-You can (currently) omit the closing bracket pair of the last shaped block.
-This is considered invalid syntax.
-
-</td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B54+5D+5D+3B+20+28+28+28+28excess+20brackets+29+29+29+29.png" width="256"/></td><td>
-
-`[[54]]; ((((excess brackets))))`
-
-</td><td>
-
-Shaped blocks use the first matching closing bracket pair.
-
-</td></tr>
-<tr><td><img src="screenshots/display_text_+5B+5B55+5D+5D+3B+20+28+3C+3C+28excess+20brackets+29+3E+3E+29.png" width="256"/></td><td>
-
-`[[55]]; (<<(excess brackets)>>)`
-
-</td><td>
-
-There is no shaped block defined for `(<...>)`, so the shaped block starts with `<<`.
+This means that you can write almost any valid display string syntax verbatim into a brace block, but formally this is a syntax error.
 
 </td></tr>
 </table>
@@ -873,13 +866,14 @@ Because the display string is visible in the HUD of the train, this will also re
 For example, the macro `Veaca=` may be defined as follows:
 
 ```lua
-visual_line_number_displays.macros["Veaca="] = {
-    "{background:#7000ba}{text:#fff}(({Veaca_Logo}";
-    "))";
+visual_line_number_displays.macros["Veaca"] = {
+    "{background:#7000ba}{text:#fff}{()|{Veaca_Logo}";
+    1;
+    "}";
 };
 ```
 
-If the display string is `{Veaca={delta}}`, the macro would expand to `{background:#7000ba}{text:#fff}(({Veaca_Logo}{delta}))`.
+If the display string is `{Veaca|{delta}}`, the macro would expand to `{background:#7000ba}{text:#fff}{()|{Veaca_Logo}{delta}}`.
 This display string uses two color brace sequences; another macro, `{Veaca_Logo}`; and the entity `{delta}`.
 The macro `{Veaca_Logo}` may be defined to expand to a numeric entity, which references a custom glyph placed in the _Private Use Area_ of `font_metro`.
 

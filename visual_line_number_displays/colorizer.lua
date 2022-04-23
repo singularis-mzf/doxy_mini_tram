@@ -258,7 +258,7 @@ function visual_line_number_displays.parse_color_string(input)
     return nil;
 end
 
-local color_brace_sequences = {
+visual_line_number_displays.color_brace_sequences = {
     a = "all";
     all = "all";
     t = "text";
@@ -303,7 +303,7 @@ function visual_line_number_displays.parse_color_brace_sequence(text, colors, of
     end
 
     local which = string.sub(sequence, 1, colon_pos - 1);
-    which = color_brace_sequences[which];
+    which = visual_line_number_displays.color_brace_sequences[which];
     if not which then
         -- Invalid color sequence. Try next one.
         return visual_line_number_displays.parse_color_brace_sequence(text, colors, end_pos + 1);
@@ -355,13 +355,13 @@ end
 
 --! Colorizes @p block using @p colors and brace sequences.
 --!
---! Brace sequences in shapeless blocks will modify @p color in-place,
+--! Brace sequences in braceless blocks will modify @p color in-place,
 --! and cause the block to be split.
 --!
 --! @returns A list of text_block_description tables if the block needs to be split.
 function visual_line_number_displays.colorize_block(block, colors)
-    if block.background_shape then
-        -- Shaped block.
+    if not block.braceless then
+        -- Brace block.
         -- Collect all colors in this block in a color_state,
         -- and then apply them on the whole block.
         local block_colors = {};
@@ -391,7 +391,7 @@ function visual_line_number_displays.colorize_block(block, colors)
         block.text_color = block_colors.text;
         block.feature_color = block_colors.feature;
     else
-        -- Shapeless block.
+        -- Braceless block.
         -- Initialize block with current colors,
         -- and split the block at every color sequence.
 

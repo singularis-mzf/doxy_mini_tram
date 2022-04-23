@@ -11,178 +11,213 @@ _G.visual_line_number_displays = {};
 require("api");
 require("parser");
 require("basic_entities");
+require("colorizer");
 
 describe("parse_text_block_string()", function()
-    -- Calls parse_text_block_string(), but removes empty tables like features.
-    local function ptbs(text)
-        local result = visual_line_number_displays.parse_text_block_string(text);
+    local ptbs = visual_line_number_displays.parse_text_block_string;
 
-        for _, block in ipairs(result) do
-            if not next(block.features) then
-                block.features = nil;
-            end
+    -- Creates a table of braceless text_block_description tables.
+    local function plain(texts)
+        local result = {};
+        for _, t in ipairs(texts) do
+            table.insert(result, { text = t, features = {}, braceless = true });
         end
-
         return result;
     end
 
     it("parses very plain texts", function()
-        assert.same({{ text = "1" }}, ptbs("1"));
-        assert.same({{ text = "S30" }}, ptbs("S30"));
-        assert.same({{ text = "Porta Westfalica" }}, ptbs("Porta Westfalica"));
+        assert.same(plain({ "1" }), ptbs("1"));
+        assert.same(plain({ "S30" }), ptbs("S30"));
+        assert.same(plain({ "Porta Westfalica" }), ptbs("Porta Westfalica"));
     end);
 
-    it("preserves single brackets", function()
-        assert.same({{ text = "(single) [brackets] <preserved>" }}, ptbs("(single) [brackets] <preserved>"));
+    it("preserves non-brace brackets", function()
+        assert.same(plain({ "(single) [brackets] <preserved>" }), ptbs("(single) [brackets] <preserved>"));
+        assert.same(plain({ "((many)) [[brackets]] <([preserved])>" }), ptbs("((many)) [[brackets]] <([preserved])>"));
     end);
 
-    it("preserves whitespace in shaped blocks", function()
+    it("preserves whitespace", function()
+        assert.same(plain({ " some \nwhitespace   " }), ptbs(" some \nwhitespace   "));
         assert.same({{
-                text = " Whitespace\n kept ";
-                background_shape = "square";
-            }}, ptbs("[[ Whitespace\n kept ]]"));
-    end);
-
-    it("removes outer space from shapeless blocks", function()
-        assert.same({{
-                text = "no outer space characters";
-            }}, ptbs("   no outer space characters   "));
-        assert.same({{
-                text = "no outer space characters inside features";
-                features = {
-                    stroke_13_background = true;
-                    stroke_foreground = true;
-                };
-            }}, ptbs("/   no outer space characters inside features   |"));
-        assert.same({}, ptbs(" "));
-    end);
-
-    it("Converts section breaks from shapeless block input", function()
-        assert.same({{
-                text = ";";
-            }}, ptbs(" \n "));
+                text = " \n More whitespace\t ";
+                features = {};
+            }}, ptbs("{ \n More whitespace\t }"));
         assert.same({
                 {
-                    text = ";";
+                    text = "Space between";
+                    features = {};
                 };
                 {
-                    text = "inner";
+                    text = "\n";
+                    features = {};
+                    braceless = true;
                 };
                 {
-                    text = ";";
+                    text = "blocks";
+                    features = {};
                 };
-                {
-                    text = "and outer";
-                };
-                {
-                    text = ";";
-                };
-                {
-                    text = "newline";
-                };
-                {
-                    text = ";";
-                };
-            }, ptbs("\n inner\nand outer \n newline\n "));
+            }, ptbs("{Space between}\n{blocks}"));
     end);
 
     it("recognizes single features", function()
         assert.same({{
                 text = "A";
                 features = {
-                    stroke_13_background = true;
+                    stroke_13_foreground = true;
                 };
-            }}, ptbs("/A"));
+            }}, ptbs("{/|A}"));
         assert.same({{
                 text = "abc";
                 features = {
-                    stroke_24_foreground = true;
+                    stroke_24_background = true;
                 };
-            }}, ptbs("abc\\"));
+            }}, ptbs("{stroke_24_background|abc}"));
     end);
 
     it("recognizes multiple features", function()
         assert.same({{
-                text = "A-";
+                text = "A";
                 features = {
                     stroke_24_background = true;
                     stroke_13_foreground = true;
                     stroke_foreground = true;
                 };
-            }}, ptbs("\\A-/|"));
+            }}, ptbs("{-|/|stroke_24_background|A}"));
     end);
 
-    it("does not recognize features within text", function()
+    it("passes through invalid features", function()
         assert.same({{
-                text = "a/b-c|d";
+                text = "invalid|feature";
                 features = {
-                    stroke_24_foreground = true;
+                    stroke_foreground = true;
                 };
-            }}, ptbs("a/b-c|d\\"));
+            }}, ptbs("{invalid|-|feature}"));
     end);
+
+    it("respects nested brace pairs", function()
+        -- Not really necessary, since macros are parsed before blocks.
+        assert.same({{
+                text = "{some|/|macro}";
+                features = {
+                    stroke_foreground = true;
+                };
+            }}, ptbs("{-|{some|/|macro}}"));
+    end);
+
+    it("preserves braceless color brace sequences", function()
+        assert.same(plain({ "{t:#000}" }), ptbs("{t:#000}"));
+        assert.same(plain({ "{text:}" }), ptbs("{text:}"));
+        assert.same({{
+                text = "invalid:#000";
+                features = {};
+            }}, ptbs("{invalid:#000}"));
+    end);
+
 
     it("recognizes background shapes", function()
-        assert.same({{ text = "A", background_shape = "square" }}, ptbs("[[A]]"));
-        assert.same({{ text = "abc", background_shape = "round" }}, ptbs("((abc))"));
-        assert.same({{ text = "First\nSecond", background_shape = "diamond" }}, ptbs("<<First\nSecond>>"));
-        assert.same({{ text = "A", background_shape = "square_outlined" }}, ptbs("_[A]_"));
-        assert.same({{ text = "abc", background_shape = "round_outlined" }}, ptbs("_(abc)_"));
-        assert.same({{ text = "First\nSecond", background_shape = "diamond_outlined" }}, ptbs("_<First\nSecond>_"));
+        assert.same({{
+                text = "A";
+                background_shape = "square";
+                features = {};
+            }}, ptbs("{[]|A}"));
+        assert.same({{
+                text = "A";
+                background_shape = "square";
+                features = {};
+            }}, ptbs("{square|A}"));
+        assert.same({{
+                text = "abc";
+                background_shape = "round";
+                features = {};
+            }}, ptbs("{()|abc}"));
+        assert.same({{
+                text = "First\nSecond";
+                background_shape = "diamond";
+                features = {};
+            }}, ptbs("{<>|First\nSecond}"));
+        assert.same({{
+                text = "A";
+                background_shape = "square_outlined";
+                features = {};
+            }}, ptbs("{_[]_|A}"));
+        assert.same({{
+                text = "abc";
+                background_shape = "round_outlined";
+                features = {};
+            }}, ptbs("{_()_|abc}"));
+        assert.same({{
+                text = "First\nSecond";
+                background_shape = "diamond_outlined";
+                features = {};
+            }}, ptbs("{_<>_|First\nSecond}"));
     end);
 
-    it("preserves emptyness in shaped blocks", function()
+    it("preserves emptyness in blocks", function()
+        assert.same({{
+                text = "";
+                features = {};
+            }}, ptbs("{}"));
         assert.same({{
                 text = "";
                 background_shape = "diamond";
-            }}, ptbs("<<>>"));
+                features = {};
+            }}, ptbs("{<>|}"));
     end);
 
     it("recognizes background patterns", function()
         assert.same({{
                 text = "A";
-                background_shape = "square";
                 background_pattern = "diag_4";
-            }}, ptbs("/[[A]]"));
+                features = {};
+            }}, ptbs("{4|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "round";
                 background_pattern = "diag_2";
-            }}, ptbs("((A))/"));
+                features = {};
+            }}, ptbs("{round|lower_right|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "diamond";
                 background_pattern = "diag_1";
-            }}, ptbs("<<A>>\\"));
+                features = {};
+            }}, ptbs("{1|<>|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "upper";
-            }}, ptbs("-[[A]]"));
+                features = {};
+            }}, ptbs("{[]|upper|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "right";
-            }}, ptbs("[[A]]|"));
+                features = {};
+            }}, ptbs("{right|square|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "x_left";
-            }}, ptbs("/\\[[A]]"));
+                features = {};
+            }}, ptbs("{left_right|[]|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "x_upper";
-            }}, ptbs("[[A]]\\/"));
+                features = {};
+            }}, ptbs("{[]|upper_lower|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "plus_4";
-            }}, ptbs("|-[[A]]"));
+                features = {};
+            }}, ptbs("{upper_left_lower_right|square|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
                 background_pattern = "plus_4";
-            }}, ptbs("-|[[A]]"));
+                features = {};
+            }}, ptbs("{[]|24|A}"));
     end);
 
     it("recognizes features and background patterns together", function()
@@ -193,7 +228,7 @@ describe("parse_text_block_string()", function()
                 features = {
                     stroke_13_background = true;
                 };
-            }}, ptbs("/[[/A]]"));
+            }}, ptbs("{4|stroke_13_background|[]|A}"));
         assert.same({{
                 text = "A";
                 background_shape = "square";
@@ -201,380 +236,70 @@ describe("parse_text_block_string()", function()
                 features = {
                     stroke_foreground = true;
                 };
-            }}, ptbs("|[[A|]]"));
+            }}, ptbs("{-|square|left|A}"));
     end);
 
     it("discards additional background patterns", function()
         assert.same({{
-                text = "A";
+                text = "upper_lower|A";
                 background_shape = "square";
                 background_pattern = "x_left";
-            }}, ptbs("/\\-[[A]]|-"));
+                features = {};
+            }}, ptbs("{[]|left_right|upper_lower|A}"));
         assert.same({{
-                text = "A";
+                text = "left|A";
                 background_shape = "square";
                 background_pattern = "right";
-            }}, ptbs("[[A]]|\\/"));
+                features = {};
+            }}, ptbs("{right|left|square|A}"));
     end);
 
-    it("splits by background block", function()
+    it("discards additional background shapes", function()
         assert.same({
                 {
-                    text = "A";
+                    text = "round|A";
                     background_shape = "square";
-                    background_pattern = "diag_3";
+                    features = {};
                 };
+            }, ptbs("{[]|round|A}"));
+        assert.same({
                 {
-                    text = "B";
+                    text = "()|A";
                     background_shape = "round";
+                    features = {};
                 };
-            }, ptbs("\\[[A]] ((B))"));
-        assert.same({
-                {
-                    text = "A";
-                    background_shape = "square_outlined";
-                };
-                {
-                    text = "B";
-                    background_shape = "square_outlined";
-                };
-            }, ptbs("_[A]__[B]_"));
-        assert.same({
-                {
-                    text = "abc";
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square";
-                };
-            }, ptbs("abc[[ABC]]"));
-        assert.same({
-                {
-                    text = "abc";
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square_outlined";
-                };
-            }, ptbs("abc_[ABC]_"));
+            }, ptbs("{round|()|A}"));
     end);
 
-    it("assigns background patterns preferably to the left block", function()
-        assert.same({
-                {
-                    text = "A";
-                    background_shape = "square";
-                    background_pattern = "right";
-                };
-                {
-                    text = "B";
-                    background_shape = "round";
-                };
-            }, ptbs("[[A]]|((B))"));
-        assert.same({
-                {
-                    text = "A";
-                    background_shape = "square";
-                    background_pattern = "diag_2";
-                };
-                {
-                    text = "B";
-                    background_shape = "square_outlined";
-                };
-            }, ptbs("[[A]]/_[B]_"));
-        assert.same({
-                {
-                    text = "abc";
-                    features = {
-                        stroke_foreground = true;
-                    };
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square";
-                };
-            }, ptbs("abc|[[ABC]]"));
-        assert.same({
-                {
-                    text = "ABC";
-                    background_shape = "square_outlined";
-                    background_pattern = "right";
-                };
-                {
-                    text = "abc";
-                };
-            }, ptbs("_[ABC]_|abc"));
+    it("preserves additional braces", function()
+        assert.same({{
+                text = "{}";
+                features = {};
+            }}, ptbs("{{}}"));
+        assert.same({{
+                text = "invalid {option}|some {braces}";
+                background_shape = "square";
+                features = {};
+            }}, ptbs("{square|invalid {option}|some {braces}}"));
     end);
 
-    it("distributes features and background patterns", function()
-        assert.same({
-                {
-                    text = "A";
-                    features = {
-                        stroke_13_foreground = true;
-                    };
-                };
-                {
-                    text = "B";
-                    background_shape = "square";
-                    background_pattern = "diag_3";
-                };
-            }, ptbs("A/ \\[[B]]"));
-        assert.same({
-                {
-                    text = "A";
-                    features = {
-                        stroke_13_foreground = true;
-                        stroke_foreground = true;
-                    };
-                };
-                {
-                    text = "B";
-                    background_shape = "square_outlined";
-                    background_pattern = "diag_3";
-                };
-            }, ptbs("A/ | \\_[B]_"));
-        assert.same({
-                {
-                    text = "A";
-                    background_shape = "square";
-                    background_pattern = "lower";
-                };
-                {
-                    text = "-";
-                };
-            }, ptbs("[[A]]- -"));
-        assert.same({
-                {
-                    text = "A";
-                    background_shape = "square_outlined";
-                    background_pattern = "lower";
-                };
-                {
-                    text = "B";
-                    background_shape = "square";
-                    background_pattern = "left";
-                };
-            }, ptbs("_[A]_- |[[B]]"));
+    it("passes through incomplete blocks", function()
+        assert.same(plain({ "incomplete {block" }), ptbs("incomplete {block"));
+        assert.same(plain({ "incomplete} block" }), ptbs("incomplete} block"));
     end);
 
-    it("uses only the first background shape", function()
-        assert.same({
-                {
-                    text = "[A";
-                    background_shape = "square";
+    it("parses options of empty blocks", function()
+        assert.same({{
+                text = "";
+                features = {
+                    stroke_13_foreground = true;
                 };
-            }, ptbs("[[[A]]"));
-        assert.same({
-                {
-                    text = "_";
-                };
-                {
-                    text = "A";
-                    background_shape = "square_outlined";
-                };
-            }, ptbs("__[A]_"));
-        assert.same({
-                {
-                    text = "<<A";
-                    background_shape = "round";
-                };
-            }, ptbs("((<<A))"));
-        assert.same({
-                {
-                    text = "A]]";
-                    background_shape = "round";
-                };
-            }, ptbs("((A]]"));
-        assert.same({
-                {
-                    text = "A )";
-                    background_shape = "square";
-                };
-            }, ptbs("[[A )"));
-        assert.same({
-                {
-                    text = " ( A ";
-                    background_shape = "square";
-                };
-                {
-                    text = ")";
-                };
-            }, ptbs("[[ ( A ]] )"));
-        assert.same({
-                {
-                    text = " [[ A ";
-                    background_shape = "diamond";
-                };
-                {
-                    text = "]]";
-                };
-            }, ptbs("<< [[ A >> ]]"));
-        assert.same({
-                {
-                    text = "[A]";
-                    background_shape = "square_outlined";
-                };
-            }, ptbs("_[[A]]_"));
-        assert.same({
-                {
-                    text = "[[A";
-                    background_shape = "square";
-                };
-                {
-                    text = "]]";
-                };
-            }, ptbs("[[[[A]]]]"));
-    end);
-
-    it("preserves braces", function()
-        assert.same({
-                {
-                    text = "{}";
-                };
-            }, ptbs("{}"));
-        assert.same({
-                {
-                    text = "{{}}";
-                };
-            }, ptbs("{{}}"));
-        assert.same({
-                {
-                    text = "{A}";
-                };
-            }, ptbs("{A}"));
-        assert.same({
-                {
-                    text = "{{A}}";
-                };
-            }, ptbs("{{A}}"));
-        assert.same({
-                {
-                    text = "{";
-                };
-                {
-                    text = "}A";
-                    background_shape = "square";
-                };
-            }, ptbs("{[[}A]]"));
-        assert.same({
-                {
-                    text = "{{";
-                };
-                {
-                    text = "A";
-                    background_shape = "square";
-                };
-            }, ptbs("{{[[A]]"));
-        assert.same({
-                {
-                    text = "{A}b";
-                    background_shape = "square";
-                };
-            }, ptbs("[[{A}b]]"));
-        assert.same({
-                {
-                    text = "A{";
-                    background_shape = "square";
-                };
-                {
-                    text = "}b]]- c}";
-                };
-            }, ptbs("[[A{]]}b]]- c}"));
-        assert.same({
-                {
-                    text = "{{|}}A";
-                    background_shape = "square";
-                    features = {
-                        stroke_foreground = true;
-                    };
-                };
-            }, ptbs("[[{{|}}A|]]"));
-    end);
-
-    it("strips shapeless blocks adjacent to shaped blocks", function()
-        assert.same({
-                {
-                    text = "abc";
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square";
-                };
-                {
-                    text = "def";
-                };
-            }, ptbs("abc [[ABC]] def"));
-        assert.same({
-                {
-                    text = "abc";
-                    features = {
-                        stroke_13_foreground = true;
-                    };
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square";
-                    background_pattern = "diag_4";
-                };
-                {
-                    text = "def";
-                    features = {
-                        stroke_background = true;
-                    };
-                };
-            }, ptbs("abc/ /[[ABC]] |def"));
-        assert.same({
-                {
-                    text = "abc";
-                    features = {
-                        stroke_13_foreground = true;
-                        stroke_foreground = true;
-                    };
-                };
-                {
-                    text = "ABC";
-                    background_shape = "square";
-                };
-                {
-                    text = "def";
-                    features = {
-                        stroke_background = true;
-                    };
-                };
-            }, ptbs("abc / | [[ABC]] | def"));
-    end);
-
-    it("parses empty blocks, assigning features to background", function()
-        assert.same({{ text = "", background_shape = "square" }}, ptbs("[[]]"));
+            }}, ptbs("{/|}"));
         assert.same({{
                 text = "";
                 background_shape = "square";
-                features = {
-                    stroke_13_background = true;
-                };
-            }}, ptbs("[[/]]"));
-        assert.same({{
-                text = "";
-                background_shape = "square";
-                features = {
-                    stroke_background = true;
-                };
-            }}, ptbs("[[|]]"));
-        assert.same({{
-                text = "";
-                background_shape = "round";
-                features = {
-                    stroke_24_background = true;
-                    stroke_background = true;
-                };
-            }}, ptbs("((\\|"));
-        assert.same({{
-                text = "";
-                features = {
-                    stroke_13_background = true;
-                };
-            }}, ptbs("/"));
+                features = {};
+            }}, ptbs("{square|}"));
     end);
 end);
 
@@ -667,9 +392,9 @@ describe("parse_macros()", function()
         macro1 = "macro_1_expanded";
         macro2 = "";
         macro3 = "{macro3}";
-        ["macro4="] = { "before", "between", "after" };
-        ["macro5="] = { "" };
-        ["macro6="] = {};
+        ["macro4"] = { "before", 1, "between", 1, "after" };
+        ["macro5"] = { "" };
+        ["macro6"] = {};
         macro7 = "ab{macro3}de{{macro2}}fg{{}macro7}";
     };
 
@@ -693,16 +418,73 @@ describe("parse_macros()", function()
     end);
 
     it("replaces macros with parameter", function()
-        assert.same({ "beforeparambetweenparamafter", true }, pm("{macro4=param}"));
-        assert.same({ "before{macro1}between{macro1}after", true }, pm("{macro4={macro1}}"));
-        assert.same({ "before{macro4={}}between{macro4={}}after", true }, pm("{macro4={macro4={}}}"));
-        assert.same({ "blabla", true }, pm("bla{macro5=abc}bla"));
-        assert.same({ "blabla", true }, pm("bla{macro6=abc}bla"));
+        assert.same({ "beforeparambetweenparamafter", true }, pm("{macro4|param}"));
+        assert.same({ "before{macro1}between{macro1}after", true }, pm("{macro4|{macro1}}"));
+        assert.same({ "before{macro4|{}}between{macro4|{}}after", true }, pm("{macro4|{macro4|{}}}"));
+        assert.same({ "blabla", true }, pm("bla{macro5|abc}bla"));
+        assert.same({ "blabla", true }, pm("bla{macro6|abc}bla"));
     end);
 
     teardown(function()
         for k, _ in pairs(macros) do
             visual_line_number_displays.macros[k] = nil;
         end
+    end);
+end);
+
+describe("parse_escapes()", function()
+    local pes = visual_line_number_displays.parse_escapes;
+
+    it("replaces escape sequences", function()
+        assert.same("A{#x20}B", pes("A\\ B"));
+        assert.same("{#x20AC}", pes("\\€"));
+        assert.same("{#x20AC}{#x20AC}", pes("\\€\\€"));
+        assert.same("{#x5C}", pes("\\\\"));
+        assert.same("{#x40}", pes("\\\064"));
+    end);
+
+    it("preserves other stuff", function()
+        assert.same("", pes(""));
+        assert.same(" ", pes(" "));
+        assert.same("ABC", pes("ABC"));
+    end);
+
+    it("tolerates early string end", function()
+        assert.same("\\", pes("\\"));
+        assert.same("\\", pes("\\\193"));
+    end);
+end);
+
+describe("next_brace_pair()", function()
+    local nbp = visual_line_number_displays.next_brace_pair;
+
+    it("finds brace pairs", function()
+        assert.same({1, 2, { "" }}, { nbp("{}", 1) });
+        assert.same({}, { nbp("{}", 2) });
+        assert.same({3, 4, { "" }}, { nbp("{}{}", 2) });
+        assert.same({1, 4, { "{}" }}, { nbp("{{}}", 1) });
+        assert.same({2, 3, { "" }}, { nbp("{{}}", 2) });
+        assert.same({1, 11, { "{blablah}" }}, { nbp("{{blablah}}", 1) });
+    end);
+
+    it("does not find unclosed brace pairs", function()
+        assert.same({}, { nbp("{", 1) });
+        assert.same({2, 3, { "" }}, { nbp("{{}", 1) });
+        assert.same({}, { nbp("}", 1) });
+        assert.same({}, { nbp("blablah}{", 1) });
+    end);
+
+    it("splits content at bars", function()
+        assert.same({1, 10, { "bla", "blah" }}, { nbp("{bla|blah}", 1) });
+        assert.same({1, 7, { "", "blah" }}, { nbp("{|blah}", 1) });
+        assert.same({1, 6, { "bla", "" }}, { nbp("{bla|}", 1) });
+        assert.same({1, 3, { "", "" }}, { nbp("{|}", 1) });
+        assert.same({1, 4, { "", "", "" }}, { nbp("{||}", 1) });
+    end);
+
+    it("preserves bars wrapped into inner brace pairs", function()
+        assert.same({1, 12, { "{bla|blah}" }}, { nbp("{{bla|blah}}", 1) });
+        assert.same({2, 11, { "bla", "blah" }}, { nbp("{{bla|blah}}", 2) });
+        assert.same({1, 12, { "bla{|}blah" }}, { nbp("{bla{|}blah}", 1) });
     end);
 end);

@@ -124,15 +124,16 @@ end
 --! The key must be a string, which is the macro name without braces.
 --! The value must be a string, which is the expanded form of the macro.
 --!
---! Macros can take one argument after an equals sign.
---! Example: “{macro=argument}”
+--! Macros can take arguments separated by bar characters.
+--! Example: “{macro|argument}”
 --!
---! The equals sign is part of the macro name,
---! so it needs to be included in the key of the table element.
---! The value must be a list of strings.
---! These strings are then concatenated, with the argument as separator.
+--! The value must be a list of strings and numbers.
+--! These strings are then concatenated, with the numbers replaced by arguments.
 --!
---! Example: <tt>macros["l="] = { "{line_", "}" }</tt>
+--! Example:
+--! @code
+--! macros["l"] = { "{line", 1, "}" }
+--! @endcode
 visual_line_number_displays.macros = {};
 
 --! Adds line number displays to advtrains wagon @c wagon_definition.

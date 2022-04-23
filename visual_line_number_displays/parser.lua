@@ -2,59 +2,52 @@
 --
 -- SPDX-License-Identifier: MIT OR LGPL-2.1-or-later
 
---! Returns an iterator through UTF-8 characters of the string @p input.
---!
---! Tolerates UTF-8 errors.
---!
---! @returns character position in @p input, character as a string.
-local function utf_8_characters(input)
-    -- I think this function would be useful in the Minetest Lua API.
-    local position = 1;
+--! Returns the byte width of the UTF-8 character starting at @p position.
+--! Returns 1 for invalid UTF-8 bytes.
+local function utf_8_width(input, position)
+    local msb = string.byte(input, position);
 
-    local function iterator()
-        if position > #input then
-            return nil;
-        end
-
-        local msb = string.byte(input, position);
-        if not msb then
-            return nil;
-        end
-
-        local char_width;
-        if msb < 0xc0 then
-            -- 0x00 .. 0x7f are single byte sequences.
-            -- 0x80 .. 0xbf are non-MSB bytes; now recovering from errors.
-            char_width = 1;
-        elseif msb < 0xe0 then
-            -- 0xc0 .. 0xc1 are start of invalid two byte sequences.
-            -- 0xc2 .. 0xdf are start of two byte sequences.
-            char_width = 2;
-        elseif msb < 0xf0 then
-            -- Start of three byte sequences.
-            char_width = 3;
-        elseif msb < 0xf8 then
-            -- 0xf0 .. 0xf4 are start of four byte sequences.
-            -- 0xf5 .. 0xf7 are start of invalid four byte sequences.
-            char_width = 4;
-        else
-            -- Start of 5+ byte sequences or entirely invalid bytes.
-            char_width = 1;
-        end
-
-        local old_position = position;
-        position = position + char_width;
-
-        return old_position, string.sub(input, old_position, position - 1);
+    if msb < 0xc0 then
+        -- 0x00 .. 0x7f are single byte sequences.
+        -- 0x80 .. 0xbf are non-MSB bytes.
+        return 1;
+    elseif msb < 0xe0 then
+        -- 0xc0 .. 0xc1 are start of invalid two byte sequences.
+        -- 0xc2 .. 0xdf are start of two byte sequences.
+        return 2;
+    elseif msb < 0xf0 then
+        -- Start of three byte sequences.
+        return 3;
+    elseif msb < 0xf8 then
+        -- 0xf0 .. 0xf4 are start of four byte sequences.
+        -- 0xf5 .. 0xf7 are start of invalid four byte sequences.
+        return 4;
+    else
+        -- Start of 5+ byte sequences or entirely invalid bytes.
+        return 1;
     end
-
-    return iterator;
 end
 
-local whitespace_characters = {
-    [" "] = true;
-    ["\n"] = true;
-};
+--! Returns the unicode codepoint of the UTF-8 character @p input as integer.
+local function string_to_codepoint(input)
+    local bytes = utf_8_width(input, 1)
+
+    if bytes == 1 then
+        return string.byte(input, 1)
+    elseif bytes == 2 then
+        return (string.byte(input, 1) - 0xc0) * 0x40
+            + string.byte(input, 2) - 0x80;
+	elseif bytes == 3 then
+		return (string.byte(input, 1) - 0xe0) * 0x1000
+			+ (string.byte(input, 2) - 0x80) * 0x40
+			+ string.byte(input, 3) - 0x80
+	elseif bytes == 4 then
+		return (string.byte(input, 1) - 0xf0) * 0x40000
+			+ (string.byte(input, 2) - 0x80) * 0x1000
+			+ (string.byte(input, 3) - 0x80) * 0x40
+			+ string.byte(input, 4) - 0x80
+	end
+end
 
 --! @class text_block_description
 --! A text_block_description table describes style and text of one text block.
@@ -110,453 +103,224 @@ local whitespace_characters = {
 
 --! Parses a text block string, returns a list of text block descriptions.
 --!
---! Braces are not handled specially, they are passed through.
---!
---! @returns List of text_block_description.
+--! @returns List of text_block_description tables.
 function visual_line_number_displays.parse_text_block_string(input)
-    -- This parser parses somewhat complex syntax.
-    -- Since invalid syntax shall be passed through without errors,
-    -- and using a system like flex/bison seems complicated for a Minetest mod,
-    -- I decided to implement the parser like this.
-    --
-    -- The parser iterates through the input strings by characters.
-    --
-    -- For each character, the current state of the parser is checked
-    -- to determine what to do with the character.
-    -- The character may be appended to the current string,
-    -- or to a temporary string if its purpose is not yet clear.
-    -- The character may also change the current state,
-    -- e. g. to start a new background block.
-    --
-    -- The parser uses many closures,
-    -- to keep the iterator loop on a high programming level.
-
-    -- Completed text blocks are inserted here.
     local result = {};
 
-    -- Constructs an empty text block description.
-    local function empty_text_block()
-        return {
-            text = "";
-            features = {};
-        };
-    end
-
-    -- The text block which is currently being constructed.
-    local current_block = empty_text_block();
-
-    -- Characters found after other text in the current block,
-    -- which may become foreground features if no other text follows.
-    local text_after = "";
-
-    -- Whether we are inside a background shape block.
-    -- Determines e. g. whether characters become foreground features
-    -- or background patterns.
-    local background_block_open = false;
-
-    -- Returns whether the current block is visually empty.
-    local function current_block_is_empty()
-        -- background_pattern can not appear without background_shape.
-        return (#current_block.text == 0) and (not next(current_block.features)) and (not current_block.background_shape);
-    end
-
-    local foreground_features = {
-        ["/"] = "stroke_13_foreground";
-        ["|"] = "stroke_foreground";
-        ["\\"] = "stroke_24_foreground";
-        ["-"] = "dash_after";
-    };
-
-    -- Parses any characters from text_after,
-    -- which were found after other text by parse_pattern_or_feature().
-    --
-    -- These become foreground features.
-    local function parse_text_after_as_foreground_features()
-        for _, character in utf_8_characters(text_after) do
-            local feature = foreground_features[character];
-
-            -- text_after may contain whitespace, so check this value.
-            if feature then
-                current_block.features[feature] = true;
-            end
-        end
-
-        text_after = "";
-    end
-
-    -- Appends the current block to results, unless it is visually empty.
-    -- Call this when the end of a text block has been found.
-    local function finish_block()
-        parse_text_after_as_foreground_features();
-
-        if not current_block.background_shape then
-            -- Shapeless blocks are not whitespace trimmed,
-            -- because whitespace is immediately discarded at the beginning,
-            -- and discarded when parsing from text_after.
-
-            -- Shapeless blocks do not need the background pattern.
-            current_block.background_pattern = nil;
-        end
-
-        -- Dash (-) is recognized as feature, because it is also used as
-        -- background pattern, and needs to be parsed at the same time.
-        -- To allow negative line numbers, this feature needs to be restored
-        -- to a dash.
-        -- TODO With the availability of additional wagon properties
-        -- TODO in advtrains, remove this piece of spaghetti code
-        -- TODO by allowing - as stroke feature.
-        if current_block.features.dash_before then
-            current_block.text = "-" .. current_block.text;
-            current_block.features.dash_before = nil;
-        end
-        if current_block.features.dash_after then
-            current_block.text = current_block.text .. "-";
-            current_block.features.dash_after = nil;
-        end
-
-        if not current_block_is_empty() then
-            table.insert(result, current_block);
-        end
-
-        current_block = empty_text_block();
-        background_block_open = false;
-    end
-
-    local background_patterns_before = {
-        ["|"] = "left";
-        ["/"] = "diag_4";
-        ["-"] = "upper";
-        ["\\"] = "diag_3";
-        -- Combinations
-        ["diag_4\\"] = "x_left";
-        ["diag_3/"] = "x_left";
-        ["upper|"] = "plus_4";
-        ["left-"] = "plus_4";
-    };
-
-    local background_patterns_after = {
-        ["|"] = "right";
-        ["/"] = "diag_2";
-        ["-"] = "lower";
-        ["\\"] = "diag_1";
-        -- Combinations
-        ["diag_2\\"] = "x_upper";
-        ["diag_1/"] = "x_upper";
-        ["lower|"] = "plus_1";
-        ["right-"] = "plus_1";
-    };
-
-    local background_features = {
-        ["/"] = "stroke_13_background";
-        ["|"] = "stroke_background";
-        ["\\"] = "stroke_24_background";
-        ["-"] = "dash_before";
-    };
-
-    -- Tries to parse a background pattern or feature character.
-    --
-    -- Before opening a background shape block,
-    -- the character is parsed as both background pattern and feature.
-    -- If this block turns out to be shapeless, the pattern is discarded.
-    --
-    -- If the block has no text yet, features go in the background.
-    -- Otherwise, features go to text_after.
-    -- text_after will be appended to text when more text is found,
-    -- and will be parsed as foreground features when the block ends.
-    --
-    -- Returns true when the character has been parsed.
-    local function parse_pattern_or_feature(character)
-        if not background_patterns_before[character] then
-            -- This is not any kind of pattern or feature.
-            return false;
-        end
-
-        if background_block_open then
-            -- Inside shaped block
-            if #current_block.text == 0 then
-                -- Background feature.
-                -- Example case: “[[/A]]”
-                local feature = background_features[character];
-                current_block.features[feature] = true;
-            else
-                -- Possibly foreground feature.
-                -- Example cases: “[[A/]]”, “[[ab/c]]”
-                text_after = text_after .. character;
-            end
-        elseif not current_block.background_shape then
-            -- Before shaped block or in shapeless block.
-            if #current_block.text == 0 then
-                -- Background feature or background pattern.
-                -- Example cases: “/A”, “/[[A]]”, “\/[[A]]”
-                local feature = background_features[character];
-                current_block.features[feature] = true;
-
-                local pattern = (current_block.background_pattern or "");
-                pattern = background_patterns_before[pattern .. character];
-                if pattern then
-                    current_block.background_pattern = pattern;
-                end
-            else
-                -- Possibly foreground feature.
-                -- Example cases: “A/”, “ab/c”
-                text_after = text_after .. character;
-            end
+    local function add_braceless_text(text)
+        if (#result > 0) and result[#result].braceless then
+            result[#result].text = result[#result].text .. text;
         else
-            -- After shaped block.
-            -- Background pattern.
-            -- Example cases: “[[A]]/”, “[[A]]\/”
-            local pattern = (current_block.background_pattern or "");
-            pattern = background_patterns_after[pattern .. character];
-            if pattern then
-                current_block.background_pattern = pattern;
-            end
+            table.insert(result, { text = text, features = {}, braceless = true });
         end
-
-        return true;
     end
 
-    local background_block_starts = {
-        ["[["] = "square";
-        ["(("] = "round";
-        ["<<"] = "diamond";
-        ["_["] = "square_outlined";
-        ["_("] = "round_outlined";
-        ["_<"] = "diamond_outlined";
-    };
-
-    -- Tries to parse a background block start character.
-    -- Returns true if the character has been parsed.
-    local function parse_background_block_start(character)
-        if background_block_open then
-            -- Already inside a shaped block.
-            return false;
+    local pos = 1;
+    while pos <= #input do
+        local left, right, parts = visual_line_number_displays.next_brace_pair(input, pos);
+        if not left then
+            break;
         end
 
-        -- Sequence includes the last character of previous text.
-        -- Opening brackets always go to text_after.
-        local sequence = string.sub(text_after, -1) .. character;
-
-        local shape = background_block_starts[sequence];
-        if not shape then
-            -- Not a background block start sequence
-            return false;
+        if left > pos then
+            add_braceless_text(string.sub(input, pos, left - 1));
         end
 
-        text_after = string.sub(text_after, 1, -2);
-
-        if (current_block.text ~= "") or (text_after ~= "") then
-            -- The previous (shapeless) block has text,
-            -- so features on that block should stay on that block.
-            -- This includes cases like “ [[A]]”, “/ [[A]]”, or “abc/[[A]]”.
-
-            if text_after ~= "" then
-                -- For cases like “abc/ |[[ABC]]”,
-                -- text_after needs to be split at the last space.
-                local last_space;
-                for pos, c in utf_8_characters(text_after) do
-                    if whitespace_characters[c] then
-                        last_space = pos;
-                    end
-                end
-
-                if last_space then
-                    local text_before = string.sub(text_after, last_space + 1);
-                    text_after = string.sub(text_after, 1, last_space);
-
-                    finish_block();
-
-                    for _, c in utf_8_characters(text_before) do
-                        parse_pattern_or_feature(c);
-                    end
-
-                    -- Remove unneeded result of parse_pattern_or_feature().
-                    current_block.features = {};
-                else
-                    finish_block();
-                end
-            else
-                finish_block();
-            end
+        local block = visual_line_number_displays.parse_text_block(parts);
+        if block then
+            table.insert(result, block);
         else
-            -- Any previous characters were background patterns,
-            -- which are already parsed, but are parsed as background feature too.
-            -- This includes cases like “/[[A]]”, “|-[[A]]”, or “ /[[A]]”.
-            -- Clear the features.
-            current_block.features = {};
+            add_braceless_text(string.sub(input, left, right));
         end
 
-        current_block.background_shape = shape;
-        current_block.text = "";
-        background_block_open = true;
-
-        return true;
+        pos = right + 1;
     end
 
-    local background_block_ends = {
-        ["]]"] = "square";
-        ["))"] = "round";
-        [">>"] = "diamond";
-        ["]_"] = "square_outlined";
-        [")_"] = "round_outlined";
-        [">_"] = "diamond_outlined";
-    };
-
-    -- Tries to parse a background block end character.
-    -- Returns true if the character has been parsed.
-    local function parse_background_block_end(character)
-        if not background_block_open then
-            return false;
-        end
-
-        -- Sequence includes the last character of previous text.
-        -- Closing brackets always go to text_after.
-        local sequence = string.sub(text_after, -1) .. character;
-
-        local shape = background_block_ends[sequence];
-        if shape == current_block.background_shape then
-            background_block_open = false;
-            text_after = string.sub(text_after, 1, -2);
-            return true;
-        else
-            return false;
-        end
+    if pos <= #input then
+        add_braceless_text(string.sub(input, pos));
     end
-
-    local section_break_characters = {
-        ["\n"] = true;
-        [";"] = true;
-    };
-
-    -- Parses a section break character,
-    -- which may be newline or semicolon at the end of a block.
-    --
-    -- In that case, the current block is finished
-    -- and a block with only a semicolon is added.
-    --
-    -- Returns true if the character has been parsed.
-    local function parse_section_break(character)
-        if background_block_open then
-            return false;
-        end
-
-        if section_break_characters[character] then
-            finish_block();
-            current_block.text = ";";
-            finish_block();
-            return true;
-        end
-
-        return false;
-    end
-
-    -- These lists show the left character of background block bracket pairs.
-    local opening_brackets = {
-        ["["] = true;
-        ["("] = true;
-        ["<"] = true;
-        ["_"] = true;
-    };
-    local closing_brackets = {
-        square = "]";
-        round = ")";
-        diamond = ">";
-        square_outlined = "]";
-        round_outlined = ")";
-        diamond_outlined = ">";
-    };
-
-    -- Parses a character as plain text.
-    -- This is done if the character is an actual text character,
-    -- or its special interpretation failed.
-    local function parse_text_character(character)
-        if (not background_block_open) and opening_brackets[character] then
-            -- This may be the beginning of a shaped block,
-            -- which isn’t yet recognized by parse_background_block_start().
-            -- Add this to text_after, so parse_background_block_start()
-            -- can pick it up and end the previous block if necessary.
-
-            -- If there were brackets in text_after previously,
-            -- the part of text_after before this bracket is actual text.
-            for pos, c in utf_8_characters(text_after) do
-                if opening_brackets[c] then
-                    current_block.text = current_block.text .. string.sub(text_after, 1, pos);
-                    text_after = string.sub(text_after, pos + 1);
-                    break;
-                end
-            end
-
-            text_after = text_after .. character;
-            return;
-        end
-
-        if background_block_open and (character == closing_brackets[current_block.background_shape]) then
-            -- This may be the end of a shaped block,
-            -- which isn’t yet recognized by parse_background_block_end().
-            -- Add this to text_after, so parse_background_block_end()
-            -- can pick it up if necessary.
-
-            -- If there were such brackets in text_after previously,
-            -- the part of text_after before this bracket is actual text.
-            local e = string.find(text_after, character, 1, --[[ plain ]] true);
-            if e then
-                current_block.text = current_block.text .. string.sub(text_after, 1, e);
-                text_after = string.sub(text_after, e + 1);
-            end
-
-            text_after = text_after .. character;
-            return;
-        end
-
-        if current_block.background_shape and (not background_block_open) then
-            -- This is the beginning of the next shapeless block
-            -- after a shaped block.
-            -- Example: “[[A]]b”
-            finish_block();
-        end
-
-        if #current_block.text == 0 then
-            -- text_after may already contain opening brackets.
-            -- (Yes, this makes the meaning of text_after even more weird.)
-            if text_after == "" then
-                if (not background_block_open) and whitespace_characters[character] then
-                    -- Do not start a shapeless block with whitespace.
-                else
-                    current_block.text = character;
-                end
-            else
-                current_block.text = text_after .. character;
-                text_after = "";
-            end
-        else
-            if whitespace_characters[character] and (not background_block_open) then
-                -- Do not cause text_after to be considered text
-                -- if it is followed by whitespace.
-                -- Examples: “abc/ [[A]]”, “abc/ /[[A]]”
-                -- But not: “[[abc/ ]]”
-                text_after = text_after .. character;
-            else
-                -- text_after needs to be applied,
-                -- since now it is known that it is text content.
-                -- Examples: “A/b”, “abc/ d”
-                current_block.text = current_block.text .. text_after .. character;
-                text_after = "";
-            end
-        end
-    end
-
-    for _, character in utf_8_characters(input) do
-        if parse_background_block_start(character) then
-        elseif parse_background_block_end(character) then
-        elseif parse_pattern_or_feature(character) then
-        elseif parse_section_break(character) then
-        else
-            parse_text_character(character);
-        end
-    end
-
-    finish_block();
 
     return result;
+end
+
+local background_shapes = {
+    square = "square";
+    ["[]"] = "square";
+    round = "round";
+    ["()"] = "round";
+    diamond = "diamond";
+    ["<>"] = "diamond";
+    square_outlined = "square_outlined";
+    ["_[]_"] = "square_outlined";
+    round_outlined = "round_outlined";
+    ["_()_"] = "round_outlined";
+    diamond_outlined = "diamond_outlined";
+    ["_<>_"] = "diamond_outlined";
+};
+
+local background_patterns = {
+    left = "left";
+    right = "right";
+    upper = "upper";
+    lower = "lower";
+    ["1"] = "diag_1";
+    ["2"] = "diag_2";
+    ["3"] = "diag_3";
+    ["4"] = "diag_4";
+    upper_right = "diag_1";
+    lower_right = "diag_2";
+    lower_left = "diag_3";
+    upper_left = "diag_4";
+    ["13"] = "plus_1";
+    ["24"] = "plus_4";
+    upper_right_lower_left = "plus_1";
+    upper_left_lower_right = "plus_4";
+    upper_lower = "x_upper";
+    left_right = "x_left";
+};
+
+local features = {
+    stroke = "stroke_foreground";
+    stroke_bg = "stroke_background";
+    stroke_fg = "stroke_foreground";
+    stroke_background = "stroke_background";
+    stroke_foreground = "stroke_foreground";
+    ["-"] = "stroke_foreground";
+    stroke_13 = "stroke_13_foreground";
+    stroke_13_bg = "stroke_13_background";
+    stroke_13_fg = "stroke_13_foreground";
+    stroke_13_background = "stroke_13_background";
+    stroke_13_foreground = "stroke_13_foreground";
+    ["/"] = "stroke_13_foreground";
+    stroke_24 = "stroke_24_foreground";
+    stroke_24_bg = "stroke_24_background";
+    stroke_24_fg = "stroke_24_foreground";
+    stroke_24_background = "stroke_24_background";
+    stroke_24_foreground = "stroke_24_foreground";
+};
+
+--! Parses the inner parts of a brace pair of a text block string.
+--!
+--! @returns one text_block_description table or nil.
+function visual_line_number_displays.parse_text_block(parts)
+    if #parts == 1 then
+        if visual_line_number_displays.entity_value(parts[1]) then
+            -- Do not consume entities.
+            return nil;
+        else
+            local colon = string.find(parts[1], ":", 1, --[[ plain ]] true);
+            if colon and visual_line_number_displays.color_brace_sequences[string.sub(parts[1], 1, colon - 1)] then
+                -- Do not consume color brace sequences.
+                return nil;
+            end
+        end
+    end
+
+    local block = {
+        text = parts[#parts];
+        features = {};
+    };
+
+    for i = 1, (#parts - 1) do
+        local part = parts[i];
+
+        if string.find(part, ":", 1, --[[ plain ]] true) then
+            -- Convert color specifications to color brace sequences.
+            block.text = "{" .. part .. "}" .. block.text;
+        elseif background_shapes[part] and (not block.background_shape) then
+            block.background_shape = background_shapes[part];
+        elseif background_patterns[part] and (not block.background_pattern) then
+            block.background_pattern = background_patterns[part];
+        elseif features[part] then
+            block.features[features[part]] = true;
+        else
+            -- Pass through invalid options.
+            block.text = part .. "|" .. block.text;
+        end
+    end
+
+    return block
+end
+
+--! Parses backslash escape sequences in the display string @p input.
+--!
+--! Any UTF-8 character may be escaped with a backslash.
+--!
+--! @returns a string with escape sequences replaced by entities.
+function visual_line_number_displays.parse_escapes(input)
+    local result = "";
+    local pos = 1;
+
+    while pos <= #input do
+        local next_pos = string.find(input, "\\", pos, --[[ plain ]] true);
+        if not next_pos then
+            result = result .. string.sub(input, pos);
+            break;
+        end
+
+        result = result .. string.sub(input, pos, next_pos - 1);
+        pos = next_pos;
+
+        -- Parse escape sequence at position pos.
+
+        if pos == #input then
+            -- Escaping nothing. Add the backslash as-is.
+            result = result .. "\\";
+            break;
+        end
+
+        local bytes = utf_8_width(input, pos + 1);
+        if pos + bytes > #input then
+            -- Early string end. Add the backslash as-is.
+            result = result .. "\\";
+            break;
+        end
+
+        local codepoint = string_to_codepoint(string.sub(input, pos + 1, pos + bytes));
+        result = result .. string.format("{#x%X}", codepoint);
+
+        -- Continue after end of escaped character.
+        pos = pos + 1 + bytes;
+    end
+
+    return result;
+end
+
+--! Returns the start and end position of the next balanced brace pair,
+--! and the content split at bar characters (outside nested brace pairs).
+function visual_line_number_displays.next_brace_pair(input, offset)
+    local left, right = string.find(input, "%b{}", offset, --[[ plain ]] false);
+    if not left then
+        return nil;
+    end
+
+    local content = string.sub(input, left + 1, right - 1);
+    local parts = {};
+
+    local last_bar = 0;
+    local pos = 1;
+    while pos <= #content do
+        local bar = string.find(content, "|", pos, --[[ plain ]] true);
+        if not bar then
+            break;
+        end
+
+        local inner_left, inner_right = string.find(content, "%b{}", pos, --[[ plain ]] false);
+        if (not inner_left) or inner_left > bar then
+            -- Bar appeared before any brace pair.
+            -- Use text until there as part.
+            table.insert(parts, string.sub(content, last_bar + 1, bar - 1));
+            last_bar = bar;
+            pos = bar + 1;
+        else
+            -- Bar appeared within or after brace pair.
+            -- Skip to end of brace pair.
+            pos = inner_right + 1;
+        end
+    end
+    table.insert(parts, string.sub(content, last_bar + 1));
+
+    return left, right, parts;
 end
 
 --! Parses space sequences in @p blocks, modifying blocks in-place.
@@ -606,32 +370,27 @@ end
 --! Parses entity brace sequences in @p blocks, modifying blocks in-place.
 --! @p blocks is a list of text_block_description tables.
 function visual_line_number_displays.parse_entities_in_blocks(blocks)
-    -- UTF-8 parsing is not necessary here,
-    -- because everything relevant is only 7 bit.
-
     for _, block in ipairs(blocks) do
         local pos = 1;
         local text = block.text
 
         while pos < #text do
-            pos = string.find(text, "{", pos, --[[ plain ]] true);
-            if not pos then
+            local left, right, parts = visual_line_number_displays.next_brace_pair(text, pos);
+            if not left then
                 break;
             end
 
-            local closing = string.find(text, "}", pos + 1, --[[ plain ]] true);
-            if not closing then
-                break;
-            end
+            if #parts == 1 then
+                local value = visual_line_number_displays.entity_value(parts[1]);
 
-            local entity = string.sub(text, pos + 1, closing - 1);
-            local value = visual_line_number_displays.entity_value(entity);
-
-            if value then
-                text = string.sub(text, 1, pos - 1) .. value .. string.sub(text, closing + 1);
-                pos = pos + #value;
+                if value then
+                    text = string.sub(text, 1, left - 1) .. value .. string.sub(text, right + 1);
+                    pos = left + #value;
+                else
+                    pos = right + 1;
+                end
             else
-                pos = closing + 1;
+                pos = right + 1;
             end
         end
 
@@ -639,42 +398,27 @@ function visual_line_number_displays.parse_entities_in_blocks(blocks)
     end
 end
 
---! Parses the inner part of a macro brace sequence and returns the result or nil.
-function visual_line_number_displays.expand_macro(input)
-    local equal = string.find(input, "=", 1, --[[ plain ]] true);
-    if equal then
-        local macro = string.sub(input, 1, equal);
-        local argument = string.sub(input, equal + 1);
-        local expanded = visual_line_number_displays.macros[macro];
-        if not expanded then
-            return nil;
-        end
-
-        return table.concat(expanded, argument);
-    else
-        return visual_line_number_displays.macros[input];
-    end
-end
-
---! Returns the end position of the brace pair starting at @p pos or nil.
---! Handles nested brace pairs.
-local function brace_pair_end(input, pos)
-    local next_left = string.find(input, "{", pos + 1, --[[ plain ]] true);
-    local next_right = string.find(input, "}", pos + 1, --[[ plain ]] true);
-
-    if not next_right then
+--! Parses the parts list of a brace pair as macro, and returns the result.
+function visual_line_number_displays.expand_macro(parts)
+    local macro_name = parts[1];
+    local macro = visual_line_number_displays.macros[macro_name];
+    if not macro then
         return nil;
-    elseif not next_left then
-        return next_right;
-    elseif next_right < next_left then
-        return next_right;
-    else
-        local nested_end = brace_pair_end(input, next_left);
-
-        -- Nested brace pair found inside current brace pair.
-        -- Continue the search for nested brace pairs after this one.
-        return brace_pair_end(input, nested_end);
     end
+
+    if type(macro) == "string" then
+        return macro;
+    end
+
+    local result = "";
+    for _, macro_part in ipairs(macro) do
+        if type(macro_part) == "string" then
+            result = result .. macro_part;
+        else
+            result = result .. parts[macro_part + 1] or "";
+        end
+    end
+    return result;
 end
 
 --! Parses macro brace sequences in @p input, and returns the result.
@@ -688,21 +432,15 @@ function visual_line_number_displays.parse_macros(input)
 
     local pos = 1;
     while pos <= #input do
-        local left = string.find(input, "{", pos, --[[ plain ]] true);
+        local left, right, parts = visual_line_number_displays.next_brace_pair(input, pos);
         if not left then
             return result .. string.sub(input, pos), expanded_anything;
         end
         result = result .. string.sub(input, pos, left - 1);
 
-        local right = brace_pair_end(input, left);
-        if not right then
-            return result .. string.sub(input, pos), expanded_anything;
-        end
-
-        local macro = string.sub(input, left + 1, right - 1);
-        local expanded = visual_line_number_displays.expand_macro(macro);
+        local expanded = visual_line_number_displays.expand_macro(parts);
         if not expanded then
-            result = result .. "{" .. macro .. "}";
+            result = result .. string.sub(input, left, right);
         else
             result = result .. expanded;
             expanded_anything = true;
@@ -712,8 +450,8 @@ function visual_line_number_displays.parse_macros(input)
 
         if #result > 250 then
             -- Macro expansion too long,
-            -- add a warning that is always outside any brace sequences.
-            -- And stop further processing of macros.
+            -- add a warning that should be always outside any brace sequences.
+            -- Return false to stop further processing of macros.
             return result .. string.sub(input, pos) .. "} maximum length exceeded", false;
         end
     end

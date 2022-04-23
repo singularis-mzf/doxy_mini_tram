@@ -10,6 +10,7 @@ package.path = "visual_line_number_displays/autotests/?.lua;" .. package.path
 _G.visual_line_number_displays = {};
 
 require("api");
+require("basic_entities");
 require("colorizer");
 require("parser");
 
@@ -40,6 +41,7 @@ local function t(text)
     return {
         text = text;
         features = {};
+        braceless = true;
     };
 end
 
@@ -71,7 +73,7 @@ describe("calculate_line_color()", function()
     it("avoids any brace sequences", function()
         assert.same(line_1_colors(), clc(ptbs("something {t:\"2\"} else [1]")));
         assert.same(line_1_colors(), clc(ptbs("{b:#123} Line 1")));
-        assert.same(line_1_colors(), clc(ptbs("{3} [1] (also 2)")));
+        assert.same(line_1_colors(), clc(ptbs("{{3}} [1] (also 2)")));
         assert.not_same(line_1_colors(), clc(ptbs("{f:#dd1}(also 2) [1]")));
         assert.same(line_1_colors(), clc(ptbs("1A {s:#ab1}")));
     end);
@@ -106,9 +108,11 @@ describe("colorize_block()", function()
     it("colorizes a shaped block with color sequence 1", function()
         local block = t("A{background:#1e00ff}");
         block.background_shape = "round";
+        block.braceless = nil;
 
         local reference = t("A");
         reference.background_shape = "round";
+        reference.braceless = nil;
         reference = line_1_colorize(reference);
 
         local colors = line_1_colors();
@@ -127,9 +131,11 @@ describe("colorize_block()", function()
         -- The color #000 seemed to cause bugs.
         local block = t("A{b:#000}");
         block.background_shape = "round";
+        block.braceless = nil;
 
         local reference = t("A");
         reference.background_shape = "round";
+        reference.braceless = nil;
         reference = line_1_colorize(reference);
         reference.background_color = "#000000";
         reference.secondary_background_color = "#ffaaff";
@@ -148,7 +154,7 @@ describe("colorize_block()", function()
         assert.same(colors_leftover_reference, colors);
     end);
 
-    it("propagates color sequences from shapeless blocks", function()
+    it("propagates color sequences from braceless blocks", function()
         local block = t("A{b:#1e00ff}");
 
         local reference = t("A");
@@ -166,7 +172,7 @@ describe("colorize_block()", function()
         assert.same(colors_leftover_reference, colors);
     end);
 
-    it("splits shapeless blocks 1", function()
+    it("splits braceless blocks 1", function()
         local block = t("A{b:#1e00ff}B");
 
         local reference = {};
@@ -185,7 +191,7 @@ describe("colorize_block()", function()
         assert.same(colors_leftover_reference, colors);
     end);
 
-    it("splits shapeless blocks 2", function()
+    it("splits braceless blocks 2", function()
         local block = t("{b:#1e00ff}B");
 
         local reference = {};
@@ -318,7 +324,7 @@ describe("colorize_blocks", function()
     end);
 
     it("colorizes a colored display with shaped blocks", function()
-        local blocks = ptbs("A [[B{b:#10f}]] C {b:#20f} (({b:#11f} D)) <<E>>");
+        local blocks = ptbs("A {square|B{b:#10f}} C {b:#20f} {round|{b:#11f} D} {<>|E}");
         local colors = line_1_colors();
 
         cb(blocks, colors);
@@ -330,6 +336,10 @@ describe("colorize_blocks", function()
             line_1_colorize(t(" D"));
             line_1_colorize(t("E"));
         };
+        reference[2].braceless = nil;
+        reference[4].braceless = nil;
+        reference[5].braceless = nil;
+
         reference[2].background_shape = "square";
         reference[4].background_shape = "round";
         reference[5].background_shape = "diamond";
